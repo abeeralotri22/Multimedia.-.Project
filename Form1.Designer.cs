@@ -30,18 +30,18 @@
         {
             this.PlayAudiobtn = new System.Windows.Forms.Button();
             this.DragDropLabel = new System.Windows.Forms.Label();
-            this.AudioInfobtn = new System.Windows.Forms.Button();
             this.waveformPictureBox = new System.Windows.Forms.PictureBox();
             this.InsertAudiobtn = new System.Windows.Forms.Button();
+            this.InfoLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.waveformPictureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // PlayAudiobtn
             // 
-            this.PlayAudiobtn.Location = new System.Drawing.Point(139, 247);
+            this.PlayAudiobtn.Location = new System.Drawing.Point(305, 236);
             this.PlayAudiobtn.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.PlayAudiobtn.Name = "PlayAudiobtn";
-            this.PlayAudiobtn.Size = new System.Drawing.Size(148, 48);
+            this.PlayAudiobtn.Size = new System.Drawing.Size(110, 48);
             this.PlayAudiobtn.TabIndex = 0;
             this.PlayAudiobtn.Text = "Play Audio ▶︎ ";
             this.PlayAudiobtn.UseVisualStyleBackColor = true;
@@ -61,16 +61,6 @@
             this.DragDropLabel.Text = "Drag and drop here";
             this.DragDropLabel.DragDrop += new System.Windows.Forms.DragEventHandler(this.DragDropLabel_DragDrop);
             this.DragDropLabel.DragEnter += new System.Windows.Forms.DragEventHandler(this.DragDropLabel_DragEnter);
-            // 
-            // AudioInfobtn
-            // 
-            this.AudioInfobtn.Location = new System.Drawing.Point(587, 99);
-            this.AudioInfobtn.Name = "AudioInfobtn";
-            this.AudioInfobtn.Size = new System.Drawing.Size(152, 44);
-            this.AudioInfobtn.TabIndex = 2;
-            this.AudioInfobtn.Text = "Display Audio Info.";
-            this.AudioInfobtn.UseVisualStyleBackColor = true;
-            this.AudioInfobtn.Click += new System.EventHandler(this.AudioInfobtn_Click_1);
             // 
             // waveformPictureBox
             // 
@@ -92,14 +82,26 @@
             this.InsertAudiobtn.UseVisualStyleBackColor = true;
             this.InsertAudiobtn.Click += new System.EventHandler(this.InsertAudiobtn_Click);
             // 
+            // InfoLabel
+            // 
+            this.InfoLabel.AutoSize = true;
+            this.InfoLabel.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.InfoLabel.Location = new System.Drawing.Point(22, 247);
+            this.InfoLabel.Name = "InfoLabel";
+            this.InfoLabel.Padding = new System.Windows.Forms.Padding(10);
+            this.InfoLabel.Size = new System.Drawing.Size(137, 37);
+            this.InfoLabel.TabIndex = 5;
+            this.InfoLabel.Text = "Audio Information";
+            this.InfoLabel.Click += new System.EventHandler(this.InfoLabel_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(781, 447);
+            this.ClientSize = new System.Drawing.Size(781, 512);
+            this.Controls.Add(this.InfoLabel);
             this.Controls.Add(this.InsertAudiobtn);
             this.Controls.Add(this.waveformPictureBox);
-            this.Controls.Add(this.AudioInfobtn);
             this.Controls.Add(this.DragDropLabel);
             this.Controls.Add(this.PlayAudiobtn);
             this.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
@@ -115,9 +117,9 @@
 
         private System.Windows.Forms.Button PlayAudiobtn;
         private System.Windows.Forms.Label DragDropLabel;
-        private System.Windows.Forms.Button AudioInfobtn;
         private System.Windows.Forms.PictureBox waveformPictureBox;
         private System.Windows.Forms.Button InsertAudiobtn;
+        private System.Windows.Forms.Label InfoLabel;
     }
 }
 

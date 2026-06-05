@@ -34,6 +34,9 @@ namespace WindowsFormsApp2
             playbackTimer = new Timer();
             playbackTimer.Interval = 50; 
             playbackTimer.Tick += PlaybackTimer_Tick;
+            //DragDropLabel.AutoSize = false;
+            DragDropLabel.TextAlign = ContentAlignment.TopLeft;
+            DragDropLabel.BorderStyle = BorderStyle.FixedSingle;
         }
         private void DragDropLabel_DragEnter(object sender, DragEventArgs e)
         {
@@ -98,15 +101,16 @@ namespace WindowsFormsApp2
                 using (AudioFileReader reader = new AudioFileReader(audioPath))
                 {
                     audioInfo =
-                        $"File Size: {(fileInfo.Length / 1024.0 / 1024.0):F2} MB\n\n" +
-                        $"Duration: {reader.TotalTime:mm\\:ss}\n\n" +
-                        $"Sample Rate: {reader.WaveFormat.SampleRate} Hz\n\n" +
-                        $"Channels: {reader.WaveFormat.Channels}\n\n" +
-                        $"Bit Depth: {reader.WaveFormat.BitsPerSample} bits\n\n" +
-                        $"Encoding: {reader.WaveFormat.Encoding}";
+    $"File Name: {Path.GetFileName(audioPath)}\r\n\r\n" +
+    $"File Size: {(fileInfo.Length / 1024.0 / 1024.0):F2} MB\r\n\r\n" +
+    $"Duration: {reader.TotalTime:mm\\:ss}\r\n\r\n" +
+    $"Sample Rate: {reader.WaveFormat.SampleRate} Hz\r\n\r\n" +
+    $"Channels: {reader.WaveFormat.Channels}\r\n\r\n" +
+    $"Bit Depth: {reader.WaveFormat.BitsPerSample} bits\r\n\r\n" +
+    $"Encoding: {reader.WaveFormat.Encoding}";
                 }
 
-                DragDropLabel.Text = Path.GetFileName(audioPath);
+                DragDropLabel.Text = audioInfo;
 
                 DrawWaveform(audioPath);
             }
@@ -158,17 +162,17 @@ namespace WindowsFormsApp2
         }
 
 
-        private void AudioInfobtn_Click_1(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(audioPath))
-            {
-                MessageBox.Show("Please drag an audio file first.");
-                return;
-            }
+        //private void AudioInfobtn_Click_1(object sender, EventArgs e)
+        //{
+        //    if (string.IsNullOrEmpty(audioPath))
+        //    {
+        //        MessageBox.Show("Please drag an audio file first.");
+        //        return;
+        //    }
 
-            AudioInfoForm infoForm = new AudioInfoForm(audioInfo);
-            infoForm.ShowDialog();
-        }
+        //    AudioInfoForm infoForm = new AudioInfoForm(audioInfo);
+        //    infoForm.ShowDialog();
+        //}
         private void DrawWaveform(string filePath)
         {
             int width = waveformPictureBox.Width;
@@ -183,22 +187,30 @@ namespace WindowsFormsApp2
                 using (Pen pen = new Pen(Color.Blue))
                 using (AudioFileReader reader = new AudioFileReader(filePath))
                 {
-                    float[] buffer = new float[width];
-                    int samplesPerPixel =
-                        (int)(reader.Length / reader.WaveFormat.BlockAlign / width);
+                    long totalSamples = reader.Length / reader.WaveFormat.BlockAlign;
+
+                    int samplesPerPixel = (int)Math.Max(1, totalSamples / width);
+
+                    float[] buffer = new float[samplesPerPixel];
 
                     for (int x = 0; x < width; x++)
                     {
-                        float max = 0;
+                        int samplesRead = reader.Read(
+                            buffer,
+                            0,
+                            buffer.Length);
 
-                        for (int i = 0; i < samplesPerPixel; i++)
+                        if (samplesRead == 0)
+                            break;
+
+                        float max = 0f;
+
+                        for (int i = 0; i < samplesRead; i++)
                         {
-                            float[] sample = new float[1];
+                            float sample = Math.Abs(buffer[i]);
 
-                            if (reader.Read(sample, 0, 1) == 0)
-                                break;
-
-                            max = Math.Max(max, Math.Abs(sample[0]));
+                            if (sample > max)
+                                max = sample;
                         }
 
                         int y = (int)(max * height / 2);
@@ -212,6 +224,9 @@ namespace WindowsFormsApp2
                     }
                 }
             }
+
+            if (waveformPictureBox.Image != null)
+                waveformPictureBox.Image.Dispose();
 
             waveformBitmap = bmp;
             waveformPictureBox.Image = (Bitmap)bmp.Clone();
@@ -307,11 +322,25 @@ namespace WindowsFormsApp2
                     $"Channels: {reader.WaveFormat.Channels}\n\n" +
                     $"Bit Depth: {reader.WaveFormat.BitsPerSample} bits\n\n" +
                     $"Encoding: {reader.WaveFormat.Encoding}";
+                InfoLabel.Text = audioInfo;
             }
 
             DragDropLabel.Text = Path.GetFileName(audioPath);
 
             DrawWaveform(audioPath);
+        }
+
+        private void InfoLabel_Click(object sender, EventArgs e)
+        {
+            //InfoLabel.AutoSize = false;
+            //InfoLabel.Width = 250;
+            //InfoLabel.Height = 120;
+            //InfoLabel.BorderStyle = BorderStyle.FixedSingle;
+            //InfoLabel.TextAlign = ContentAlignment.TopLeft;
+            //InfoLabel.Font = new Font("Tahoma", 9);
+
+            //InfoLabel.Text = audioInfo;
+            
         }
     }
 }
