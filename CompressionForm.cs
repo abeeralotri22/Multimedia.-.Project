@@ -14,7 +14,7 @@ namespace WindowsFormsApp2
         private byte[] _copied_audio = null;
         private DpcmMetadata _compressedMetadata = null;
 
-   // variable to hold the decompressed sound wave in memory 
+        // variable to hold the decompressed sound wave in memory 
         private byte[] _decompressedPcmBytes = null;
 
         public class DpcmMetadata
@@ -35,7 +35,7 @@ namespace WindowsFormsApp2
 
         private void CompressionForm_Load(object sender, EventArgs e)
         {
-       }
+        }
 
         private void RenderDpcmParameters()
         {
@@ -115,7 +115,7 @@ namespace WindowsFormsApp2
             }
         }
 
-      
+
         private string FormatBytes(long bytes)
         {
             double kb = bytes / 1024.0;
@@ -130,7 +130,7 @@ namespace WindowsFormsApp2
                 return $"{kb:F2} KB";
             }
         }
-      
+
         private void ExecuteDpcmCompressionToMemory(string inputPath, int targetSampleRate, int bits, int predictorType)
         {
             using (var reader = new AudioFileReader(inputPath))
@@ -235,7 +235,7 @@ namespace WindowsFormsApp2
             }
         }
 
-       
+
         private void ExecuteDpcmDecompressionToMemory()
         {
             using (MemoryStream msInput = new MemoryStream(_copied_audio))
@@ -245,7 +245,7 @@ namespace WindowsFormsApp2
                 byte bits = _compressedMetadata.Bits;
                 int totalSamples = _compressedMetadata.TotalSamples;
 
-          
+
                 short[] decompressedShorts = new short[totalSamples];
 
                 int maxLevels = (int)Math.Pow(2, bits);
@@ -280,13 +280,13 @@ namespace WindowsFormsApp2
                     prevSample1 = (short)reconstructedSample;
                 }
 
-          
+
                 _decompressedPcmBytes = new byte[decompressedShorts.Length * 2];
                 Buffer.BlockCopy(decompressedShorts, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
             }
         }
 
-        
+
         // When you want to play this back in the future, you won't need to read a file. 
         // You can feed it straight to NAudio's waveOut component like this:
         /*

@@ -28,83 +28,34 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.cmbSamplingRate = new System.Windows.Forms.ComboBox();
-            this.cmbPredictorType = new System.Windows.Forms.ComboBox();
             this.btnRunCompression = new System.Windows.Forms.Button();
-            this.numQuantBits = new System.Windows.Forms.NumericUpDown();
             this.btnRunDecompression = new System.Windows.Forms.Button();
             this.cmbAlgorithmType = new System.Windows.Forms.ComboBox();
+            this.cmbPredictorType = new System.Windows.Forms.ComboBox();
+            this.numQuantBits = new System.Windows.Forms.NumericUpDown();
+            this.cmbSamplingRate = new System.Windows.Forms.ComboBox();
             this.pnlParameters = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantBits)).BeginInit();
             this.pnlParameters.SuspendLayout();
             this.SuspendLayout();
             // 
-            // cmbSamplingRate
-            // 
-            this.cmbSamplingRate.FormattingEnabled = true;
-            this.cmbSamplingRate.Items.AddRange(new object[] {
-            "44100",
-            "22050",
-            "16000",
-            "11025",
-            "8000",
-            "",
-            ""});
-            this.cmbSamplingRate.Location = new System.Drawing.Point(54, 12);
-            this.cmbSamplingRate.Name = "cmbSamplingRate";
-            this.cmbSamplingRate.Size = new System.Drawing.Size(121, 21);
-            this.cmbSamplingRate.TabIndex = 0;
-            this.cmbSamplingRate.Text = "Sampling Rate";
-            // 
-            // cmbPredictorType
-            // 
-            this.cmbPredictorType.FormattingEnabled = true;
-            this.cmbPredictorType.Items.AddRange(new object[] {
-            "First-Order (Previous Sample)",
-            "Second-Order (Linear Extrapolation)"});
-            this.cmbPredictorType.Location = new System.Drawing.Point(54, 65);
-            this.cmbPredictorType.Name = "cmbPredictorType";
-            this.cmbPredictorType.Size = new System.Drawing.Size(121, 21);
-            this.cmbPredictorType.TabIndex = 1;
-            this.cmbPredictorType.Text = "Predictor Type";
-            // 
             // btnRunCompression
             // 
-            this.btnRunCompression.Location = new System.Drawing.Point(545, 222);
+            this.btnRunCompression.Location = new System.Drawing.Point(818, 342);
+            this.btnRunCompression.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRunCompression.Name = "btnRunCompression";
-            this.btnRunCompression.Size = new System.Drawing.Size(156, 23);
+            this.btnRunCompression.Size = new System.Drawing.Size(234, 35);
             this.btnRunCompression.TabIndex = 2;
             this.btnRunCompression.Text = "Compress";
             this.btnRunCompression.UseVisualStyleBackColor = true;
             this.btnRunCompression.Click += new System.EventHandler(this.btnRunCompression_Click);
             // 
-            // numQuantBits
-            // 
-            this.numQuantBits.Location = new System.Drawing.Point(55, 39);
-            this.numQuantBits.Maximum = new decimal(new int[] {
-            8,
-            0,
-            0,
-            0});
-            this.numQuantBits.Minimum = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            this.numQuantBits.Name = "numQuantBits";
-            this.numQuantBits.Size = new System.Drawing.Size(120, 20);
-            this.numQuantBits.TabIndex = 3;
-            this.numQuantBits.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            // 
             // btnRunDecompression
             // 
-            this.btnRunDecompression.Location = new System.Drawing.Point(545, 272);
+            this.btnRunDecompression.Location = new System.Drawing.Point(818, 418);
+            this.btnRunDecompression.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRunDecompression.Name = "btnRunDecompression";
-            this.btnRunDecompression.Size = new System.Drawing.Size(156, 23);
+            this.btnRunDecompression.Size = new System.Drawing.Size(234, 35);
             this.btnRunDecompression.TabIndex = 4;
             this.btnRunDecompression.Text = "Decompress";
             this.btnRunDecompression.UseVisualStyleBackColor = true;
@@ -118,11 +69,66 @@
             "batool ",
             "abeer",
             "ghody"});
-            this.cmbAlgorithmType.Location = new System.Drawing.Point(490, 37);
+            this.cmbAlgorithmType.Location = new System.Drawing.Point(735, 57);
+            this.cmbAlgorithmType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbAlgorithmType.Name = "cmbAlgorithmType";
-            this.cmbAlgorithmType.Size = new System.Drawing.Size(284, 21);
+            this.cmbAlgorithmType.Size = new System.Drawing.Size(424, 28);
             this.cmbAlgorithmType.TabIndex = 5;
             this.cmbAlgorithmType.SelectedIndexChanged += new System.EventHandler(this.cmbAlgorithmType_SelectedIndexChanged);
+            // 
+            // cmbPredictorType
+            // 
+            this.cmbPredictorType.FormattingEnabled = true;
+            this.cmbPredictorType.Items.AddRange(new object[] {
+            "First-Order (Previous Sample)",
+            "Second-Order (Linear Extrapolation)"});
+            this.cmbPredictorType.Location = new System.Drawing.Point(81, 100);
+            this.cmbPredictorType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmbPredictorType.Name = "cmbPredictorType";
+            this.cmbPredictorType.Size = new System.Drawing.Size(180, 28);
+            this.cmbPredictorType.TabIndex = 1;
+            this.cmbPredictorType.Text = "Predictor Type";
+            // 
+            // numQuantBits
+            // 
+            this.numQuantBits.Location = new System.Drawing.Point(82, 60);
+            this.numQuantBits.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.numQuantBits.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numQuantBits.Minimum = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.numQuantBits.Name = "numQuantBits";
+            this.numQuantBits.Size = new System.Drawing.Size(180, 26);
+            this.numQuantBits.TabIndex = 3;
+            this.numQuantBits.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // cmbSamplingRate
+            // 
+            this.cmbSamplingRate.FormattingEnabled = true;
+            this.cmbSamplingRate.Items.AddRange(new object[] {
+            "44100",
+            "22050",
+            "16000",
+            "11025",
+            "8000",
+            "",
+            ""});
+            this.cmbSamplingRate.Location = new System.Drawing.Point(81, 18);
+            this.cmbSamplingRate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmbSamplingRate.Name = "cmbSamplingRate";
+            this.cmbSamplingRate.Size = new System.Drawing.Size(180, 28);
+            this.cmbSamplingRate.TabIndex = 0;
+            this.cmbSamplingRate.Text = "Sampling Rate";
             // 
             // pnlParameters
             // 
@@ -130,20 +136,22 @@
             this.pnlParameters.Controls.Add(this.cmbSamplingRate);
             this.pnlParameters.Controls.Add(this.numQuantBits);
             this.pnlParameters.Controls.Add(this.cmbPredictorType);
-            this.pnlParameters.Location = new System.Drawing.Point(490, 73);
+            this.pnlParameters.Location = new System.Drawing.Point(735, 112);
+            this.pnlParameters.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlParameters.Name = "pnlParameters";
-            this.pnlParameters.Size = new System.Drawing.Size(284, 126);
+            this.pnlParameters.Size = new System.Drawing.Size(426, 194);
             this.pnlParameters.TabIndex = 6;
             // 
             // CompressionForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1200, 692);
             this.Controls.Add(this.pnlParameters);
             this.Controls.Add(this.cmbAlgorithmType);
             this.Controls.Add(this.btnRunDecompression);
             this.Controls.Add(this.btnRunCompression);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "CompressionForm";
             this.Text = "Audio DPCM Compression Parameters";
             this.Load += new System.EventHandler(this.CompressionForm_Load);
@@ -155,12 +163,12 @@
 
         #endregion
 
-        private System.Windows.Forms.ComboBox cmbSamplingRate;
-        private System.Windows.Forms.ComboBox cmbPredictorType;
         private System.Windows.Forms.Button btnRunCompression;
-        private System.Windows.Forms.NumericUpDown numQuantBits;
         private System.Windows.Forms.Button btnRunDecompression;
         private System.Windows.Forms.ComboBox cmbAlgorithmType;
+        private System.Windows.Forms.ComboBox cmbPredictorType;
+        private System.Windows.Forms.NumericUpDown numQuantBits;
+        private System.Windows.Forms.ComboBox cmbSamplingRate;
         private System.Windows.Forms.Panel pnlParameters;
     }
 }
