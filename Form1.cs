@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Reflection.Emit;
+using Emgu.CV; // (فقط هذا السطر الخاص بـ Emgu)
 
 namespace WindowsFormsApp2
 {
@@ -26,7 +27,15 @@ namespace WindowsFormsApp2
         public Form1()
         {
             InitializeComponent();
-
+            try
+            {
+                var mat = new Emgu.CV.Mat();
+                // MessageBox.Show("Emgu CV is working!"); // يمكنك فك التعليق لاحقاً
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Emgu CV not found! Error: " + ex.Message);
+            }
             DragDropLabel.AllowDrop = true;
 
             DragDropLabel.DragEnter += DragDropLabel_DragEnter;
@@ -68,6 +77,22 @@ namespace WindowsFormsApp2
             }
 
             e.Effect = DragDropEffects.None;
+        }
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // كود اختبار Emgu CV
+            try
+            {
+                // هذا السطر يجبر المكتبة على التحميل
+                var mat = new Emgu.CV.Mat();
+                MessageBox.Show("تم تحميل Emgu CV بنجاح!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("فشل تحميل Emgu CV: " + ex.Message);
+            }
         }
 
         private void DragDropLabel_DragDrop(object sender, DragEventArgs e)
@@ -368,4 +393,6 @@ namespace WindowsFormsApp2
 
         }
     }
+
+
 }
