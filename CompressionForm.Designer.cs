@@ -43,11 +43,13 @@
             // 
             this.cmbSamplingRate.FormattingEnabled = true;
             this.cmbSamplingRate.Items.AddRange(new object[] {
-            "8000",
-            "11025",
-            "16000",
+            "44100",
             "22050",
-            "44100"});
+            "16000",
+            "11025",
+            "8000",
+            "",
+            ""});
             this.cmbSamplingRate.Location = new System.Drawing.Point(54, 12);
             this.cmbSamplingRate.Name = "cmbSamplingRate";
             this.cmbSamplingRate.Size = new System.Drawing.Size(121, 21);
@@ -93,7 +95,7 @@
             this.numQuantBits.Size = new System.Drawing.Size(120, 20);
             this.numQuantBits.TabIndex = 3;
             this.numQuantBits.Value = new decimal(new int[] {
-            4,
+            2,
             0,
             0,
             0});
@@ -106,6 +108,7 @@
             this.btnRunDecompression.TabIndex = 4;
             this.btnRunDecompression.Text = "Decompress";
             this.btnRunDecompression.UseVisualStyleBackColor = true;
+            this.btnRunDecompression.Click += new System.EventHandler(this.btnRunDecompression_Click);
             // 
             // cmbAlgorithmType
             // 
