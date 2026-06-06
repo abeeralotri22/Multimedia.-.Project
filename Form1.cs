@@ -329,6 +329,26 @@ namespace WindowsFormsApp2
 
             DrawWaveform(audioPath);
         }
+        private void btnOpenCompression_Click(object sender, EventArgs e)
+        {
+            // Ensure an audio file is actually loaded first
+            if (string.IsNullOrEmpty(this.audioPath))
+            {
+                MessageBox.Show("Please load an audio file first!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Open the compression form as a dialog box
+            using (CompressionForm compressionWindow = new CompressionForm(this.audioPath))
+            {
+                if (compressionWindow.ShowDialog() == DialogResult.OK)
+                {
+                   // MessageBox.Show("Compression completed successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Optional: Reload the compressed file or update UI
+                }
+            }
+        }
+        
 
         private void InfoLabel_Click(object sender, EventArgs e)
         {
@@ -341,6 +361,11 @@ namespace WindowsFormsApp2
 
             //InfoLabel.Text = audioInfo;
             
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

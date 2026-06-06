@@ -132,6 +132,12 @@
     <Compile Include="AudioInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="CompressionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CompressionForm.Designer.cs">
+      <DependentUpon>CompressionForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -142,6 +148,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="AudioInfoForm.resx">
       <DependentUpon>AudioInfoForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CompressionForm.resx">
+      <DependentUpon>CompressionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
