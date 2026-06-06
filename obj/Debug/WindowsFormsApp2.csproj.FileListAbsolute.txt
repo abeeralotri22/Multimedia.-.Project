@@ -225,3 +225,4 @@ C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.P
 C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\Debug\WindowsF.EA766B00.Up2Date
 C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\Debug\WindowsFormsApp2.exe
 C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\Debug\WindowsFormsApp2.pdb
+C:\Users\Lenovo\OneDrive\Desktop\MultimediaProject001\MultimediaProject001\obj\Debug\WindowsFormsApp2.CompressionForm.resources

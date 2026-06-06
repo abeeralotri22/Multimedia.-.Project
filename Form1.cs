@@ -29,15 +29,53 @@ namespace WindowsFormsApp2
         private string _inputFilePath;
         private byte[] _copied_audio = null;
         private DpcmMetadata _compressedMetadata = null;
+        private DmMetadata _dmMetadata = null;
+        private AdmMetadata _admMetadata = null;
         private byte[] _decompressedPcmBytes = null;
+
+        private short[] _originalSamples = null;
+
+        private NumericUpDown numLpfCutoff;
+        private NumericUpDown numStepSize;
+        private NumericUpDown numInitStepSize;
+        private NumericUpDown numAdaptationFactor;
+        private NumericUpDown numMaxStepSize;
+        private NumericUpDown numHistoryBits;
 
         public class DpcmMetadata
         {
+            public string OriginalExtension { get; set; }
+
             public int SampleRate { get; set; }
             public byte Bits { get; set; }
             public int TotalSamples { get; set; }
+
         }
 
+        public class DmMetadata
+        {
+            public string OriginalExtension { get; set; }
+
+            public int SampleRate { get; set; }
+            public int TotalSamples { get; set; }
+
+            public float StepSize { get; set; }
+            public int LpfCutoff { get; set; }
+        }
+
+        public class AdmMetadata
+        {
+            public string OriginalExtension { get; set; }
+
+            public int SampleRate { get; set; }
+            public int TotalSamples { get; set; }
+
+            public float InitStepSize { get; set; }
+            public float AdaptationFactor { get; set; }
+            public float MaxStepSize { get; set; }
+            public int HistoryBits { get; set; }
+            public int LpfCutoff { get; set; }
+        }
         public Form1()
         {
             InitializeComponent();
@@ -56,7 +94,7 @@ namespace WindowsFormsApp2
                 cmbAlgorithmType.SelectedIndex = 0;
         }
 
-     
+
         private void DragDropLabel_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -322,7 +360,7 @@ namespace WindowsFormsApp2
             btnRunDecompression.Enabled = false;
         }
 
-      // ALGORITHMS
+        // ALGORITHMS
         private void RenderDpcmParameters()
         {
             Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
@@ -342,6 +380,117 @@ namespace WindowsFormsApp2
             pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblPredictor, cmbPredictorType });
         }
 
+        private void RenderDMParameters()
+        {
+            Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
+            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 120 };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "32000", "44100" });
+            cmbSamplingRate.SelectedIndex = 1;
+
+            Label lblStepSize = new Label { Text = "Fixed Step Size:", Location = new Point(10, 55), AutoSize = true };
+            numStepSize = new NumericUpDown
+            {
+                Location = new Point(160, 52),
+                Width = 120,
+                Minimum = 0.001M,
+                Maximum = 1.0M,
+                DecimalPlaces = 3,
+                Increment = 0.005M,
+                Value = 0.02M
+            };
+
+            Label lblLpfCutoff = new Label { Text = "LPF Cutoff Freq:", Location = new Point(10, 95), AutoSize = true };
+            numLpfCutoff = new NumericUpDown
+            {
+                Location = new Point(160, 92),
+                Width = 120,
+                Minimum = 1000,
+                Maximum = 20000,
+                Increment = 100,
+                Value = 3400
+            };
+
+            pnlParameters.Controls.Clear();
+            pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblStepSize, numStepSize, lblLpfCutoff, numLpfCutoff });
+        }
+
+
+        private void RenderADMParameters()
+        {
+            Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
+            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 120 };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "32000", "44100" });
+            cmbSamplingRate.SelectedIndex = 1;
+
+            Label lblInitStep = new Label { Text = "Initial Step Size:", Location = new Point(10, 55), AutoSize = true };
+            numInitStepSize = new NumericUpDown
+            {
+                Location = new Point(160, 52),
+                Width = 120,
+                Minimum = 0.001M,
+                Maximum = 0.5M,
+                DecimalPlaces = 3,
+                Increment = 0.005M,
+                Value = 0.01M
+            };
+
+            Label lblAdaptation = new Label { Text = "Adaptation Factor:", Location = new Point(10, 95), AutoSize = true };
+            numAdaptationFactor = new NumericUpDown
+            {
+                Location = new Point(160, 92),
+                Width = 120,
+                Minimum = 1.1M,
+                Maximum = 3.0M,
+                DecimalPlaces = 2,
+                Increment = 0.1M,
+                Value = 1.5M
+            };
+
+            Label lblMaxStep = new Label { Text = "Max Step Size:", Location = new Point(10, 135), AutoSize = true };
+            numMaxStepSize = new NumericUpDown
+            {
+                Location = new Point(160, 132),
+                Width = 120,
+                Minimum = 0.05M,
+                Maximum = 2.0M,
+                DecimalPlaces = 2,
+                Increment = 0.05M,
+                Value = 0.3M
+            };
+
+            Label lblHistory = new Label { Text = "History Bits (Memory):", Location = new Point(10, 175), AutoSize = true };
+            numHistoryBits = new NumericUpDown
+            {
+                Location = new Point(160, 172),
+                Width = 120,
+                Minimum = 2,
+                Maximum = 5,
+                Value = 3
+            };
+
+            Label lblLpfCutoff = new Label { Text = "LPF Cutoff Freq:", Location = new Point(10, 215), AutoSize = true };
+            numLpfCutoff = new NumericUpDown
+            {
+                Location = new Point(160, 212),
+                Width = 120,
+                Minimum = 1000,
+                Maximum = 20000,
+                Increment = 100,
+                Value = 3400
+            };
+
+            pnlParameters.Controls.Clear();
+            pnlParameters.Controls.AddRange(new Control[] {
+        lblRate, cmbSamplingRate,
+        lblInitStep, numInitStepSize,
+        lblAdaptation, numAdaptationFactor,
+        lblMaxStep, numMaxStepSize,
+        lblHistory, numHistoryBits,
+        lblLpfCutoff, numLpfCutoff
+    });
+        }
+
+
         private void cmbAlgorithmType_SelectedIndexChanged(object sender, EventArgs e)
         {
             pnlParameters.Controls.Clear();
@@ -350,6 +499,14 @@ namespace WindowsFormsApp2
             if (selectedAlgorithm == "DPCM")
             {
                 RenderDpcmParameters();
+            }
+            else if (selectedAlgorithm == "Delta Modulation")
+            {
+                RenderDMParameters();
+            }
+            else if (selectedAlgorithm == "Adaptive Delta Modulation")
+            {
+                RenderADMParameters();
             }
         }
 
@@ -398,7 +555,94 @@ namespace WindowsFormsApp2
                     this.Cursor = Cursors.Default;
                 }
             }
+
+            else if (selectedAlgorithm == "Delta Modulation")
+            {
+                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+                {
+                    targetSamplingRate = 16000;
+                }
+
+                double stepSize = (double)numStepSize.Value;
+                int lpfCutoff = (int)numLpfCutoff.Value;
+
+                try
+                {
+                    btnRunCompression.Enabled = false;
+                    this.Cursor = Cursors.WaitCursor;
+
+                    ExecuteDmCompressionToMemory(_inputFilePath, targetSamplingRate, stepSize, lpfCutoff);
+
+                    long originalSize = new FileInfo(_inputFilePath).Length;
+                    long compressedSize = _copied_audio.Length;
+                    double ratio = (double)originalSize / compressedSize;
+
+                    string originalSizeFormatted = FormatBytes(originalSize);
+                    string compressedSizeFormatted = FormatBytes(compressedSize);
+
+                    MessageBox.Show($"Compressed to Memory using DM!\n\n" +
+                                    $"Original Size: {originalSizeFormatted}\n" +
+                                    $"In-Memory Size: {compressedSizeFormatted}\n" +
+                                    $"Compression Ratio: {ratio:F2}x",
+                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    btnRunCompression.Enabled = true;
+                    this.Cursor = Cursors.Default;
+                }
+            }
+            else if (selectedAlgorithm == "Adaptive Delta Modulation")
+            {
+                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+                {
+                    targetSamplingRate = 16000;
+                }
+
+                double initStepSize = (double)numInitStepSize.Value;
+                double adaptationFactor = (double)numAdaptationFactor.Value;
+                double maxStepSize = (double)numMaxStepSize.Value;
+                int historyBits = (int)numHistoryBits.Value;
+                int lpfCutoff = (int)numLpfCutoff.Value;
+
+                try
+                {
+                    btnRunCompression.Enabled = false;
+                    this.Cursor = Cursors.WaitCursor;
+
+                    ExecuteAdmCompressionToMemory(_inputFilePath, targetSamplingRate, initStepSize, adaptationFactor, maxStepSize, historyBits, lpfCutoff);
+
+                    long originalSize = new FileInfo(_inputFilePath).Length;
+                    long compressedSize = _copied_audio.Length;
+                    double ratio = (double)originalSize / compressedSize;
+
+                    string originalSizeFormatted = FormatBytes(originalSize);
+                    string compressedSizeFormatted = FormatBytes(compressedSize);
+
+                    MessageBox.Show($"Compressed to Memory using ADM!\n\n" +
+                                    $"Original Size: {originalSizeFormatted}\n" +
+                                    $"In-Memory Size: {compressedSizeFormatted}\n" +
+                                    $"Compression Ratio: {ratio:F2}x",
+                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    btnRunCompression.Enabled = true;
+                    this.Cursor = Cursors.Default;
+                }
+            }
         }
+     
 
         private string FormatBytes(long bytes)
         {
@@ -482,28 +726,234 @@ namespace WindowsFormsApp2
             }
         }
 
+
+        private void ExecuteDmCompressionToMemory(string inputPath, int targetSampleRate, double stepSize, int lpfCutoff)
+        {
+            using (var reader = new AudioFileReader(inputPath))
+            {
+                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+                var sampleProvider = resampler.ToSampleProvider();
+
+                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+                _dmMetadata = new DmMetadata
+                {
+                    SampleRate = targetSampleRate,
+                    TotalSamples = samplesRead,
+                    StepSize = (float)stepSize,
+                    LpfCutoff = lpfCutoff,
+                    OriginalExtension = Path.GetExtension(inputPath)
+                };
+                float[] audioSamples = new float[samplesRead];
+                Array.Copy(floatBuffer, audioSamples, samplesRead);
+                _originalSamples = new short[samplesRead];
+
+                for (int i = 0; i < samplesRead; i++)
+                {
+                    _originalSamples[i] = (short)Math.Max(
+                        short.MinValue,
+                        Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+                }
+                using (MemoryStream ms = new MemoryStream())
+                using (BinaryWriter writer = new BinaryWriter(ms))
+                {
+                    float predictedValue = 0f;
+                    float step = (float)stepSize;
+
+                    byte currentByte = 0;
+                    int bitCounter = 0;
+
+                    for (int n = 0; n < samplesRead; n++)
+                    {
+                        int bit;
+                        if (audioSamples[n] >= predictedValue)
+                        {
+                            bit = 1;
+                            predictedValue += step; 
+                        }
+                        else
+                        {
+                            bit = 0;
+                            predictedValue -= step;
+                        }
+
+                        currentByte |= (byte)(bit << (7 - bitCounter));
+                        bitCounter++;
+
+                        if (bitCounter == 8)
+                        {
+                            writer.Write(currentByte);
+                            currentByte = 0;
+                            bitCounter = 0;
+                        }
+                    }
+
+                    if (bitCounter > 0)
+                    {
+                        writer.Write(currentByte);
+                    }
+
+                    writer.Flush();
+                    _copied_audio = ms.ToArray();
+
+                }
+            }
+        }
+
+
+        private void ExecuteAdmCompressionToMemory(string inputPath, int targetSampleRate, double initStepSize, double adaptationFactor, double maxStepSize, int historyBits, int lpfCutoff)
+        {
+            using (var reader = new AudioFileReader(inputPath))
+            {
+                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+                var sampleProvider = resampler.ToSampleProvider();
+
+                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+                _admMetadata = new AdmMetadata
+                {
+                    SampleRate = targetSampleRate,
+                    TotalSamples = samplesRead,
+                    InitStepSize = (float)initStepSize,
+                    AdaptationFactor = (float)adaptationFactor,
+                    MaxStepSize = (float)maxStepSize,
+                    HistoryBits = historyBits,
+                    LpfCutoff = lpfCutoff,
+                    OriginalExtension = Path.GetExtension(inputPath)
+                };
+                float[] audioSamples = new float[samplesRead];
+                Array.Copy(floatBuffer, audioSamples, samplesRead);
+                _originalSamples = new short[samplesRead];
+
+                for (int i = 0; i < samplesRead; i++)
+                {
+                    _originalSamples[i] = (short)Math.Max(
+                        short.MinValue,
+                        Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+                }
+                using (MemoryStream ms = new MemoryStream())
+                using (BinaryWriter writer = new BinaryWriter(ms))
+                {
+                    float predictedValue = 0f;
+                    float currentStepSize = (float)initStepSize;
+                    float minStep = (float)initStepSize;
+                    float maxStep = (float)maxStepSize;
+                    float K = (float)adaptationFactor;
+
+                    int[] historyPattern = new int[historyBits];
+
+                    byte currentByte = 0;
+                    int bitCounter = 0;
+
+                    for (int n = 0; n < samplesRead; n++)
+                    {
+                        int bit;
+                        if (audioSamples[n] >= predictedValue)
+                        {
+                            bit = 1;
+                            predictedValue += currentStepSize;
+                        }
+                        else
+                        {
+                            bit = 0;
+                            predictedValue -= currentStepSize;
+                        }
+
+                        for (int i = historyBits - 1; i > 0; i--)
+                        {
+                            historyPattern[i] = historyPattern[i - 1];
+                        }
+                        historyPattern[0] = bit;
+
+                        if (n >= historyBits - 1)
+                        {
+                            bool allSame = true;
+                            bool alternating = true;
+
+                            for (int i = 1; i < historyBits; i++)
+                            {
+                                if (historyPattern[i] != historyPattern[0]) allSame = false;
+                                if (historyPattern[i] == historyPattern[i - 1]) alternating = false;
+                            }
+
+                            if (allSame)
+                            {
+                                currentStepSize = Math.Min(maxStep, currentStepSize * K);
+                            }
+                            else if (alternating)
+                            {
+                                currentStepSize = Math.Max(minStep, currentStepSize / K);
+                            }
+                        }
+
+                        currentByte |= (byte)(bit << (7 - bitCounter));
+                        bitCounter++;
+
+                        if (bitCounter == 8)
+                        {
+                            writer.Write(currentByte);
+                            currentByte = 0;
+                            bitCounter = 0;
+                        }
+                    }
+
+                    if (bitCounter > 0)
+                    {
+                        writer.Write(currentByte);
+                    }
+
+                    writer.Flush();
+                    _copied_audio = ms.ToArray();
+                }
+            }
+        }
+
+
         private void btnRunDecompression_Click(object sender, EventArgs e)
         {
-            if (_copied_audio == null || _compressedMetadata == null)
+            if (_copied_audio == null)
             {
-                MessageBox.Show("No compressed data found in memory! Run compression first.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("No compressed data found in memory! Run compression first.",
+                    "Notice",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
-
+            string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
             try
             {
                 btnRunDecompression.Enabled = false;
                 this.Cursor = Cursors.WaitCursor;
 
-                ExecuteDpcmDecompressionToMemory();
+                if (selectedAlgorithm == "DPCM")
+                {
+                    ExecuteDpcmDecompressionToMemory();
+                }
+                else if (selectedAlgorithm == "Delta Modulation")
+                {
+                    ExecuteDmDecompressionToMemory();
+                }
+                else if (selectedAlgorithm == "Adaptive Delta Modulation")
+                {
+                    ExecuteAdmDecompressionToMemory();
+                }
+                
 
                 long decompressedSize = _decompressedPcmBytes.Length;
                 string decompressedSizeFormatted = FormatBytes(decompressedSize);
 
-                MessageBox.Show($"Audio decompressed completely in memory!\n\n" +
-                                $"Decompressed Size: {decompressedSizeFormatted}\n" +
-                                $"Status: Ready for playing or processing.",
-                                "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                double mse = CalculateMSE();
+
+                MessageBox.Show(
+                    $"Audio decompressed completely in memory!\n\n" +
+                    $"Decompressed Size: {decompressedSizeFormatted}\n" +
+                    $"MSE: {mse:F2}\n\n" +
+                    $"Status: Ready for playing or processing.",
+                    "Success",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -564,7 +1014,180 @@ namespace WindowsFormsApp2
             }
         }
 
-        
+        private void ExecuteDmDecompressionToMemory()
+        {
+            using (MemoryStream msInput = new MemoryStream(_copied_audio))
+            using (BinaryReader reader = new BinaryReader(msInput))
+            {
+                int sampleRate = _dmMetadata.SampleRate;
+                int totalSamples = _dmMetadata.TotalSamples;
+
+                short[] decompressedShorts = new short[totalSamples];
+
+                float predictedValue = 0f;
+                float step = _dmMetadata.StepSize;
+
+                int byteIndex = 0;
+                byte currentByte = 0;
+                int bitCounter = 8;
+
+                for (int n = 0; n < totalSamples; n++)
+                {
+                    if (bitCounter == 8)
+                    {
+                        if (reader.BaseStream.Position >= reader.BaseStream.Length) break;
+                        currentByte = reader.ReadByte();
+                        bitCounter = 0;
+                    }
+
+                    int bit = (currentByte >> (7 - bitCounter)) & 1;
+                    bitCounter++;
+
+                    if (bit == 1)
+                    {
+                        predictedValue += step;
+                    }
+                    else
+                    {
+                        predictedValue -= step;
+                    }
+
+                    predictedValue = Math.Max(-1f, Math.Min(1f, predictedValue));
+                    decompressedShorts[n] = (short)Math.Max(-32768, Math.Min(32767, predictedValue * 32767f));
+                }
+
+                _decompressedPcmBytes = new byte[decompressedShorts.Length * 2];
+                Buffer.BlockCopy(decompressedShorts, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+            }
+        }
+
+        private void ExecuteAdmDecompressionToMemory()
+        {
+            using (MemoryStream msInput = new MemoryStream(_copied_audio))
+            using (BinaryReader reader = new BinaryReader(msInput))
+            {
+                int sampleRate = _admMetadata.SampleRate;
+                int totalSamples = _admMetadata.TotalSamples;
+
+                short[] decompressedShorts = new short[totalSamples];
+
+                float predictedValue = 0f;
+                float currentStepSize = _admMetadata.InitStepSize;
+                float minStep = _admMetadata.InitStepSize;
+                float maxStep = _admMetadata.MaxStepSize;
+                float K = _admMetadata.AdaptationFactor;
+                int historyBits = _admMetadata.HistoryBits;
+
+                int[] historyPattern = new int[historyBits];
+
+                int byteIndex = 0;
+                byte currentByte = 0;
+                int bitCounter = 8;
+
+                for (int n = 0; n < totalSamples; n++)
+                {
+                    if (bitCounter == 8)
+                    {
+                        if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                            break;
+
+                        currentByte = reader.ReadByte();
+                        bitCounter = 0;
+                    }
+
+                    int bit = (currentByte >> (7 - bitCounter)) & 1;
+                    bitCounter++;
+
+                    if (bit == 1)
+                    {
+                        predictedValue += currentStepSize;
+                    }
+                    else
+                    {
+                        predictedValue -= currentStepSize;
+                    }
+
+                    for (int i = historyBits - 1; i > 0; i--)
+                    {
+                        historyPattern[i] = historyPattern[i - 1];
+                    }
+
+                    historyPattern[0] = bit;
+
+                    if (n >= historyBits - 1)
+                    {
+                        bool allSame = true;
+                        bool alternating = true;
+
+                        for (int i = 1; i < historyBits; i++)
+                        {
+                            if (historyPattern[i] != historyPattern[0])
+                                allSame = false;
+
+                            if (historyPattern[i] == historyPattern[i - 1])
+                                alternating = false;
+                        }
+
+                        if (allSame)
+                        {
+                            currentStepSize = Math.Min(maxStep, currentStepSize * K);
+                        }
+                        else if (alternating)
+                        {
+                            currentStepSize = Math.Max(minStep, currentStepSize / K);
+                        }
+                    }
+
+                    predictedValue = Math.Max(-1f, Math.Min(1f, predictedValue));
+
+                    decompressedShorts[n] =
+                        (short)Math.Max(-32768,
+                        Math.Min(32767, predictedValue * 32767f));
+                }
+
+                _decompressedPcmBytes = new byte[decompressedShorts.Length * 2];
+
+                Buffer.BlockCopy(
+                    decompressedShorts,
+                    0,
+                    _decompressedPcmBytes,
+                    0,
+                    _decompressedPcmBytes.Length);
+            }
+        }
+        private double CalculateMSE()
+        {
+            if (_originalSamples == null || _decompressedPcmBytes == null)
+                return -1;
+
+            short[] reconstructed =
+                new short[_decompressedPcmBytes.Length / 2];
+
+            Buffer.BlockCopy(
+                _decompressedPcmBytes,
+                0,
+                reconstructed,
+                0,
+                _decompressedPcmBytes.Length);
+
+            int count = Math.Min(
+                _originalSamples.Length,
+                reconstructed.Length);
+
+            double mse = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                double error =
+                    _originalSamples[i] - reconstructed[i];
+
+                mse += error * error;
+            }
+
+            mse /= count;
+
+            return mse;
+        }
 
         /*
         private void PlayInMemoryAudio()
