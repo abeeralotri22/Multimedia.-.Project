@@ -1,5 +1,4 @@
 ﻿
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,10 +7,14 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 //using System.Reflection.Emit;
 using Emgu.CV; // (فقط هذا السطر الخاص بـ Emgu)
+using NAudio.Wave;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+
 
 
 namespace WindowsFormsApp2
@@ -23,7 +26,7 @@ namespace WindowsFormsApp2
         private string audioInfo = "";
         private WaveOutEvent outputDevice;
         private AudioFileReader audioFile;
-        private Timer playbackTimer;
+        private System.Windows.Forms.Timer playbackTimer;
         private Bitmap waveformBitmap;
         private bool isPlaying = false;
         private const double MuLawMu = 255.0;
@@ -47,16 +50,26 @@ namespace WindowsFormsApp2
         private NumericUpDown numAdaptationFactor;
         private NumericUpDown numMaxStepSize;
         private NumericUpDown numHistoryBits;
-        private ComboBox cmbSampleRate;
-        private ComboBox cmbChannels;
+        private System.Windows.Forms.ComboBox cmbSampleRate;
+        private System.Windows.Forms.ComboBox cmbChannels;
         //ghody
 
         private NumericUpDown numLevels;
         private NumericUpDown numStep;
         private NumericUpDown numPredictionOrder;
-        private ComboBox cmbMode;
+        private System.Windows.Forms.ComboBox cmbMode;
         private CheckBox chkIsMono;
-        private ComboBox cmbSampleRate1; // وهذا أيضاً
+        private System.Windows.Forms.ComboBox cmbSampleRate1; // وهذا أيضاً
+
+
+        // REQUIREMENT 7
+        private List<float> _ratioHistory = new List<float>();
+        private List<float> _speedHistory = new List<float>();
+        private long _originalFileSize = 0;
+        private DateTime _compressionStartTime;
+        private System.Windows.Forms.Timer _chartTimer;
+        //private CancellationTokenSource _cancellationTokenSource;
+
         public class DpcmMetadata
         {
             public string OriginalExtension { get; set; }
@@ -118,7 +131,7 @@ namespace WindowsFormsApp2
 
             DragDropLabel.DragEnter += DragDropLabel_DragEnter;
             DragDropLabel.DragDrop += DragDropLabel_DragDrop;
-            playbackTimer = new Timer();
+            playbackTimer = new System.Windows.Forms.Timer();
             playbackTimer.Interval = 50;
             playbackTimer.Tick += PlaybackTimer_Tick;
             DragDropLabel.TextAlign = ContentAlignment.TopLeft;
@@ -414,6 +427,14 @@ namespace WindowsFormsApp2
             pnlParameters.Enabled = true;
             btnRunCompression.Enabled = true;
             btnRunDecompression.Enabled = true;
+            _ratioHistory.Clear();
+            _speedHistory.Clear();
+            progressBar.Value = 0;
+            lblProgressPercent.Text = "Ready";
+            lblChartRatio.Text = "Compression Ratio:";
+            lblChartSpeed.Text = "Processing Speed:";
+            DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
+            DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", 1f);
         }
 
         //private void btnOpenCompression_Click(object sender, EventArgs e)
@@ -434,6 +455,34 @@ namespace WindowsFormsApp2
             pnlParameters.Enabled = false;
             btnRunCompression.Enabled = false;
             btnRunDecompression.Enabled = false;
+
+            _chartTimer = new System.Windows.Forms.Timer();
+            _chartTimer.Interval = 100;
+            lblChartRatio.AutoSize = true;
+            lblChartSpeed.AutoSize = true;
+            _chartTimer.Tick += (s, ev) =>
+            {
+                if (_ratioHistory.Count > 0)
+                {
+                    float currentRatio = _ratioHistory[_ratioHistory.Count - 1];
+                    lblChartRatio.Text = $"Compression Ratio: {currentRatio:F2}%";
+                    DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
+                }
+
+                if (_speedHistory.Count > 0)
+                {
+                    float currentSpeed = _speedHistory[_speedHistory.Count - 1];
+                    string speedText = currentSpeed >= 1000000
+                        ? $"Processing Speed: {currentSpeed / 1000000:F2}M samples/sec"
+                        : currentSpeed >= 1000
+                            ? $"Processing Speed: {currentSpeed / 1000:F1}K samples/sec"
+                            : $"Processing Speed: {currentSpeed:F0} samples/sec";
+                    lblChartSpeed.Text = speedText;
+
+                    float maxSpeed = _speedHistory.Max();
+                    DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", maxSpeed);
+                }
+            };
         }
 
         // ALGORITHMS
@@ -441,7 +490,7 @@ namespace WindowsFormsApp2
         {
             Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
 
-            cmbSamplingRate = new ComboBox { Location = new Point(150, 12), Width = 120 };
+            cmbSamplingRate = new System.Windows.Forms.ComboBox { Location = new Point(150, 12), Width = 120 };
             cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "44100" });
             cmbSamplingRate.SelectedIndex = 1;
 
@@ -449,7 +498,7 @@ namespace WindowsFormsApp2
             numQuantBits = new NumericUpDown { Location = new Point(150, 52), Width = 120, Minimum = 2, Maximum = 8, Value = 2 };
 
             Label lblPredictor = new Label { Text = "Predictor Filter:", Location = new Point(10, 95), AutoSize = true };
-            cmbPredictorType = new ComboBox { Location = new Point(150, 92), Width = 120 };
+            cmbPredictorType = new System.Windows.Forms.ComboBox { Location = new Point(150, 92), Width = 120 };
             cmbPredictorType.Items.AddRange(new object[] { "First-Order", "Second-Order" });
             cmbPredictorType.SelectedIndex = 0;
 
@@ -460,7 +509,7 @@ namespace WindowsFormsApp2
         {
             Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
 
-            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate = new System.Windows.Forms.ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
             // Mu-Law uses 8000 Hz as the requested default sample rate.
             cmbSamplingRate.SelectedIndex = 0;
@@ -470,7 +519,7 @@ namespace WindowsFormsApp2
             numQuantBits = new NumericUpDown { Location = new Point(160, 52), Width = 140, Minimum = 2, Maximum = 16, Value = 8 };
 
             Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
-            cmbChannels = new ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels = new System.Windows.Forms.ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
             // Mono is selected first so the panel opens with the requested default.
             cmbChannels.SelectedIndex = 0;
@@ -482,7 +531,7 @@ namespace WindowsFormsApp2
         {
             Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
 
-            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate = new System.Windows.Forms.ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
             // A-Law uses the same sample-rate options and 8000 Hz default as Mu-Law.
             cmbSamplingRate.SelectedIndex = 0;
@@ -492,7 +541,7 @@ namespace WindowsFormsApp2
             numQuantBits = new NumericUpDown { Location = new Point(160, 52), Width = 140, Minimum = 2, Maximum = 16, Value = 8 };
 
             Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
-            cmbChannels = new ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels = new System.Windows.Forms.ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
             cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
             // The first item is the requested Mono default.
             cmbChannels.SelectedIndex = 0;
@@ -503,7 +552,7 @@ namespace WindowsFormsApp2
         private void RenderDMParameters()
         {
             Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
-            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 120 };
+            cmbSamplingRate = new System.Windows.Forms.ComboBox { Location = new Point(160, 12), Width = 120 };
             cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "32000", "44100" });
             cmbSamplingRate.SelectedIndex = 1;
 
@@ -538,7 +587,7 @@ namespace WindowsFormsApp2
         private void RenderADMParameters()
         {
             Label lblRate = new Label { Text = "Sampling Rate:", Location = new Point(10, 15), AutoSize = true };
-            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 120 };
+            cmbSamplingRate = new System.Windows.Forms.ComboBox { Location = new Point(160, 12), Width = 120 };
             cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "32000", "44100" });
             cmbSamplingRate.SelectedIndex = 1;
 
@@ -624,13 +673,13 @@ namespace WindowsFormsApp2
 
     // 3. Mode
     Label lblMode = new Label { Text = "Mode:", Location = new Point(10, 95), AutoSize = true };
-    cmbMode = new ComboBox { Location = new Point(160, 92), Width = 120 };
+    cmbMode = new System.Windows.Forms.ComboBox { Location = new Point(160, 92), Width = 120 };
     cmbMode.Items.AddRange(new object[] { "Simple", "Linear", "Adaptive" });
     cmbMode.SelectedIndex = 0;
 
     // 4. Sample Rate (ComboBox)
     Label lblRate = new Label { Text = "Target Sample Rate:", Location = new Point(10, 135), AutoSize = true };
-    cmbSampleRate = new ComboBox { Location = new Point(160, 132), Width = 120 };
+    cmbSampleRate = new System.Windows.Forms.ComboBox { Location = new Point(160, 132), Width = 120 };
     cmbSampleRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
     cmbSampleRate.SelectedIndex = 1;
 
@@ -709,242 +758,727 @@ namespace WindowsFormsApp2
             }
         }
 
-        private void btnRunCompression_Click(object sender, EventArgs e)
+        //private void btnRunCompression_Click(object sender, EventArgs e)
+        //{
+        //    string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+
+        //    if (selectedAlgorithm == "DPCM")
+        //    {
+        //        string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //        if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //        {
+        //            targetSamplingRate = 16000;
+        //        }
+
+        //        int quantizationBits = (int)numQuantBits.Value;
+        //        int predictorType = cmbPredictorType.SelectedIndex == 1 ? 1 : 0;
+
+        //        try
+        //        {
+        //            btnRunCompression.Enabled = false;
+        //            this.Cursor = Cursors.WaitCursor;
+
+        //            ExecuteDpcmCompressionToMemory(_inputFilePath, targetSamplingRate, quantizationBits, predictorType);
+
+        //            long originalSize = new FileInfo(_inputFilePath).Length;
+        //            long compressedSize = _copied_audio.Length;
+        //            double ratio = (double)originalSize / compressedSize;
+
+        //            string originalSizeFormatted = FormatBytes(originalSize);
+        //            string compressedSizeFormatted = FormatBytes(compressedSize);
+
+        //            MessageBox.Show($"Compressed to Memory!\n\n" +
+        //                            $"Original Size: {originalSizeFormatted}\n" +
+        //                            $"In-Memory Size: {compressedSizeFormatted}\n" +
+        //                            $"Compression Ratio: {ratio:F2}x",
+        //                            "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //        finally
+        //        {
+        //            btnRunCompression.Enabled = true;
+        //            this.Cursor = Cursors.Default;
+        //        }
+        //    }
+        //    else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+        //    {
+        //        string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //        if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //        {
+        //            targetSamplingRate = 8000;
+        //        }
+
+        //        int bitDepth = (int)numQuantBits.Value;
+        //        bool useMono = cmbChannels == null || cmbChannels.SelectedIndex == 0;
+
+        //        try
+        //        {
+        //            btnRunCompression.Enabled = false;
+        //            this.Cursor = Cursors.WaitCursor;
+
+        //            ExecuteCompandingCompressionToMemory(_inputFilePath, selectedAlgorithm, targetSamplingRate, bitDepth, useMono);
+
+        //            long originalSize = new FileInfo(_inputFilePath).Length;
+        //            long compressedSize = _copied_audio.Length;
+        //            double ratio = (double)originalSize / compressedSize;
+
+        //            MessageBox.Show($"Compressed to Memory using {selectedAlgorithm}!\n\n" +
+        //                            $"Returned File: {Path.GetFileNameWithoutExtension(_inputFilePath)}_{selectedAlgorithm.Replace("-", "").ToLower()}_compressed.wav\n" +
+        //                            $"Returned Extension: .wav\n" +
+        //                            $"Original Size: {FormatBytes(originalSize)}\n" +
+        //                            $"Returned Size: {FormatBytes(compressedSize)}\n" +
+        //                            $"Compression Ratio: {ratio:F2}x",
+        //                            "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //        finally
+        //        {
+        //            btnRunCompression.Enabled = true;
+        //            this.Cursor = Cursors.Default;
+        //        }
+        //    }
+
+        //    else if (selectedAlgorithm == "Delta Modulation")
+        //    {
+        //        string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //        if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //        {
+        //            targetSamplingRate = 16000;
+        //        }
+
+        //        double stepSize = (double)numStepSize.Value;
+        //        int lpfCutoff = (int)numLpfCutoff.Value;
+
+        //        try
+        //        {
+        //            btnRunCompression.Enabled = false;
+        //            this.Cursor = Cursors.WaitCursor;
+
+        //            ExecuteDmCompressionToMemory(_inputFilePath, targetSamplingRate, stepSize, lpfCutoff);
+
+        //            long originalSize = new FileInfo(_inputFilePath).Length;
+        //            long compressedSize = _copied_audio.Length;
+        //            double ratio = (double)originalSize / compressedSize;
+
+        //            string originalSizeFormatted = FormatBytes(originalSize);
+        //            string compressedSizeFormatted = FormatBytes(compressedSize);
+
+        //            MessageBox.Show($"Compressed to Memory using DM!\n\n" +
+        //                            $"Original Size: {originalSizeFormatted}\n" +
+        //                            $"In-Memory Size: {compressedSizeFormatted}\n" +
+        //                            $"Compression Ratio: {ratio:F2}x",
+        //                            "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //        finally
+        //        {
+        //            btnRunCompression.Enabled = true;
+        //            this.Cursor = Cursors.Default;
+        //        }
+        //    }
+        //    else if (selectedAlgorithm == "Adaptive Delta Modulation")
+        //    {
+        //        string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //        if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //        {
+        //            targetSamplingRate = 16000;
+        //        }
+
+        //        double initStepSize = (double)numInitStepSize.Value;
+        //        double adaptationFactor = (double)numAdaptationFactor.Value;
+        //        double maxStepSize = (double)numMaxStepSize.Value;
+        //        int historyBits = (int)numHistoryBits.Value;
+        //        int lpfCutoff = (int)numLpfCutoff.Value;
+
+        //        try
+        //        {
+        //            btnRunCompression.Enabled = false;
+        //            this.Cursor = Cursors.WaitCursor;
+
+        //            ExecuteAdmCompressionToMemory(_inputFilePath, targetSamplingRate, initStepSize, adaptationFactor, maxStepSize, historyBits, lpfCutoff);
+
+        //            long originalSize = new FileInfo(_inputFilePath).Length;
+        //            long compressedSize = _copied_audio.Length;
+        //            double ratio = (double)originalSize / compressedSize;
+
+        //            string originalSizeFormatted = FormatBytes(originalSize);
+        //            string compressedSizeFormatted = FormatBytes(compressedSize);
+
+        //            MessageBox.Show($"Compressed to Memory using ADM!\n\n" +
+        //                            $"Original Size: {originalSizeFormatted}\n" +
+        //                            $"In-Memory Size: {compressedSizeFormatted}\n" +
+        //                            $"Compression Ratio: {ratio:F2}x",
+        //                            "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //        finally
+        //        {
+        //            btnRunCompression.Enabled = true;
+        //            this.Cursor = Cursors.Default;
+        //        }
+
+        //    }
+        //    else if (selectedAlgorithm == "Adaptive Predictive")
+        //    {
+        //        try
+        //        {
+        //            // 1. التأكد من أن الأدوات ليست فارغة قبل القراءة
+        //            if (cmbSampleRate.SelectedItem == null || numLevels == null || numPredictionOrder == null)
+        //            {
+        //                MessageBox.Show("خطأ: لم يتم تهيئة الأدوات بشكل صحيح.");
+        //                return;
+        //            }
+
+        //            // 2. قراءة القيم
+        //            int sampleRate = int.Parse(cmbSampleRate.SelectedItem.ToString());
+        //            int levels = (int)numLevels.Value;
+        //            double stepSize = (double)numStep.Value;
+        //            // استبدلي سطر الـ mode في btnRunCompression_Click بهذا:
+        //            string selectedModeText = cmbMode.SelectedItem.ToString();
+        //            CompressionEngine.PredictionMode mode = (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), selectedModeText); bool isMono = chkIsMono.Checked;
+        //            int predictorOrder = (int)numPredictionOrder.Value;
+
+        //            btnRunCompression.Enabled = false;
+        //            this.Cursor = Cursors.WaitCursor;
+
+        //            // 3. تنفيذ الضغط
+        //            var result = ExecuteAdaptivePredictiveCompression(_inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
+
+        //            // 4. معالجة البيانات والـ Header
+        //            long compressedSize = 0;
+        //            using (MemoryStream ms = new MemoryStream())
+        //            using (BinaryWriter writer = new BinaryWriter(ms))
+        //            {
+        //                writer.Write(levels);
+        //                writer.Write((int)mode);
+        //                writer.Write(stepSize);
+        //                writer.Write(sampleRate);
+        //                writer.Write(result.CompressedData.Length);
+        //                writer.Write(result.CompressedData);
+        //                _copied_audio = ms.ToArray();
+        //                compressedSize = ms.Length; // الحجم الكلي مع الـ Header
+        //            }
+
+        //            // 5. الحسابات
+        //            long originalSize = new FileInfo(_inputFilePath).Length;
+        //            long rawPcmSize = (long)result.TotalSamples * 2;
+        //            double realRatio = (double)rawPcmSize / compressedSize;
+
+        //            // 6. ظهور الرسالة المطلوبة
+        //            MessageBox.Show($"حجم الصوت الخام (Raw PCM): {rawPcmSize} بايت\n" +
+        //                            $"الحجم النهائي (مع الـ Header): {compressedSize} بايت\n" +
+        //                            $"نسبة الضغط الفعلية: {realRatio:F2}x", "تحليل الضغط");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            // إذا حدث أي خطأ (مثل قسمة على صفر أو ملف تالف)، ستظهر هذه الرسالة وتخبركِ بالسبب
+        //            MessageBox.Show($"حدث خطأ أثناء الضغط: \n{ex.Message}\n{ex.StackTrace}", "خطأ في الضغط");
+        //        }
+        //        finally
+        //        {
+        //            btnRunCompression.Enabled = true;
+        //            this.Cursor = Cursors.Default;
+        //        }
+        //    }
+        //}
+
+
+        private CompressionInterface GetSelectedAlgorithm()
+        {
+            switch (cmbAlgorithmType.SelectedItem?.ToString())
+            {
+                case "DPCM": return new DpcmAlgorithm();
+                case "Mu-Law": return new MuLawAlgorithm();
+                case "A-Law": return new ALawAlgorithm();
+                case "Delta Modulation": return new DeltaModulationAlgorithm();
+                case "Adaptive Delta Modulation": return new AdaptiveDeltaModulationAlgorithm();
+                //case "Adaptive Predictive": return new AdaptivePredictiveAlgorithm();
+                default: return null;
+            }
+        }
+
+        //private async void btnRunCompression_Click(object sender, EventArgs e)
+        //{
+        //    string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+        //    if (string.IsNullOrEmpty(selectedAlgorithm)) return;
+
+        //    try
+        //    {
+        //        btnRunCompression.Enabled = false;
+        //        btnRunDecompression.Enabled = false;
+        //        this.Cursor = Cursors.WaitCursor;
+
+        //        ResetProgressUI();
+        //        _chartTimer.Start();
+
+        //        // ===== DPCM — يستخدم الـ interface =====
+        //        if (selectedAlgorithm == "DPCM")
+        //        {
+        //            CompressionInterface algorithm = new DpcmAlgorithm();
+
+        //            string samplingRateText = cmbSamplingRate.SelectedItem != null
+        //                ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //            if (!int.TryParse(samplingRateText, out int targetSampleRate))
+        //                targetSampleRate = 16000;
+
+        //            var parameters = new Dictionary<string, object>
+        //            {
+        //                ["bits"] = (int)numQuantBits.Value,
+        //                ["predictorType"] = cmbPredictorType.SelectedIndex
+        //            };
+
+        //            float[] samples;
+        //            using (var reader = new AudioFileReader(_inputFilePath))
+        //            {
+        //                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+        //                var sampleProvider = resampler.ToSampleProvider();
+        //                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+        //                float[] buffer = new float[estimatedSamples + targetSampleRate];
+        //                int samplesRead = sampleProvider.Read(buffer, 0, buffer.Length);
+        //                samples = new float[samplesRead];
+        //                Array.Copy(buffer, samples, samplesRead);
+        //                parameters["totalSamples"] = samplesRead;
+        //            }
+
+        //            byte[] result = await Task.Run(() =>
+        //                algorithm.Compress(samples, targetSampleRate, parameters,
+        //                    (percent, samplesProcessed, bytesWritten) =>
+        //                    {
+        //                        UpdateProgressUI(percent, samplesProcessed, bytesWritten);
+        //                        //System.Threading.Thread.Sleep(50);
+        //                    })
+        //            );
+
+        //            _copied_audio = result;
+        //            _compressedMetadata = new DpcmMetadata
+        //            {
+        //                SampleRate = targetSampleRate,
+        //                Bits = (byte)(int)parameters["bits"],
+        //                TotalSamples = (int)parameters["totalSamples"]
+        //            };
+        //        }
+
+        //        // ===== Mu-Law / A-Law =====
+        //        else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+        //        {
+        //            string samplingRateText = cmbSamplingRate.SelectedItem != null
+        //                ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //            if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //                targetSamplingRate = 8000;
+
+        //            int bitDepth = (int)numQuantBits.Value;
+        //            bool useMono = cmbChannels == null || cmbChannels.SelectedIndex == 0;
+
+        //            //await Task.Run(() =>
+        //            //    ExecuteCompandingCompressionToMemory(
+        //            //        _inputFilePath, selectedAlgorithm, targetSamplingRate, bitDepth, useMono));
+        //            await Task.Run(() =>
+        //            ExecuteCompandingCompressionToMemory(
+        //                _inputFilePath, selectedAlgorithm, targetSamplingRate, bitDepth, useMono,
+        //                (percent, samplesProcessed, bytesWritten) =>
+        //                    UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+        //        }
+
+        //        // ===== Delta Modulation =====
+        //        else if (selectedAlgorithm == "Delta Modulation")
+        //        {
+        //            string samplingRateText = cmbSamplingRate.SelectedItem != null
+        //                ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //            if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //                targetSamplingRate = 16000;
+
+        //            double stepSize = (double)numStepSize.Value;
+        //            int lpfCutoff = (int)numLpfCutoff.Value;
+
+        //            //await Task.Run(() =>
+        //            //    ExecuteDmCompressionToMemory(
+        //            //        _inputFilePath, targetSamplingRate, stepSize, lpfCutoff));
+        //            await Task.Run(() =>
+        //            ExecuteDmCompressionToMemory(
+        //                _inputFilePath, targetSamplingRate, stepSize, lpfCutoff,
+        //                (percent, samplesProcessed, bytesWritten) =>
+        //                    UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+        //        }
+
+        //        // ===== Adaptive Delta Modulation =====
+        //        else if (selectedAlgorithm == "Adaptive Delta Modulation")
+        //        {
+        //            string samplingRateText = cmbSamplingRate.SelectedItem != null
+        //                ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+        //            if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+        //                targetSamplingRate = 16000;
+
+        //            double initStepSize = (double)numInitStepSize.Value;
+        //            double adaptationFactor = (double)numAdaptationFactor.Value;
+        //            double maxStepSize = (double)numMaxStepSize.Value;
+        //            int historyBits = (int)numHistoryBits.Value;
+        //            int lpfCutoff = (int)numLpfCutoff.Value;
+
+        //            //await Task.Run(() =>
+        //            //    ExecuteAdmCompressionToMemory(
+        //            //        _inputFilePath, targetSamplingRate, initStepSize,
+        //            //        adaptationFactor, maxStepSize, historyBits, lpfCutoff));
+        //            await Task.Run(() =>
+        //            ExecuteAdmCompressionToMemory(
+        //                _inputFilePath, targetSamplingRate, initStepSize,
+        //                adaptationFactor, maxStepSize, historyBits, lpfCutoff,
+        //                (percent, samplesProcessed, bytesWritten) =>
+        //                    UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+        //        }
+
+        //        // ===== Adaptive Predictive =====
+        //        else if (selectedAlgorithm == "Adaptive Predictive")
+        //        {
+        //            if (cmbSampleRate.SelectedItem == null || numLevels == null || numPredictionOrder == null)
+        //            {
+        //                MessageBox.Show("خطأ: لم يتم تهيئة الأدوات بشكل صحيح.");
+        //                return;
+        //            }
+
+        //            int sampleRate = int.Parse(cmbSampleRate.SelectedItem.ToString());
+        //            int levels = (int)numLevels.Value;
+        //            double stepSize = (double)numStep.Value;
+        //            string selectedModeText = cmbMode.SelectedItem.ToString();
+        //            CompressionEngine.PredictionMode mode = (CompressionEngine.PredictionMode)
+        //                Enum.Parse(typeof(CompressionEngine.PredictionMode), selectedModeText);
+        //            bool isMono = chkIsMono.Checked;
+        //            int predictorOrder = (int)numPredictionOrder.Value;
+
+        //            //await Task.Run(() =>
+        //            //{
+        //            //    var result = ExecuteAdaptivePredictiveCompression(
+        //            //        _inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
+
+        //            //    using (MemoryStream ms = new MemoryStream())
+        //            //    using (BinaryWriter writer = new BinaryWriter(ms))
+        //            //    {
+        //            //        writer.Write(levels);
+        //            //        writer.Write((int)mode);
+        //            //        writer.Write(stepSize);
+        //            //        writer.Write(sampleRate);
+        //            //        writer.Write(result.CompressedData.Length);
+        //            //        writer.Write(result.CompressedData);
+        //            //        _copied_audio = ms.ToArray();
+        //            //    }
+        //            //});
+
+        //            await Task.Run(() =>
+        //            {
+        //                var result = ExecuteAdaptivePredictiveCompression(
+        //                    _inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
+
+        //                using (MemoryStream ms = new MemoryStream())
+        //                using (BinaryWriter writer = new BinaryWriter(ms))
+        //                {
+        //                    writer.Write(levels);
+        //                    writer.Write((int)mode);
+        //                    writer.Write(stepSize);
+        //                    writer.Write(sampleRate);
+        //                    writer.Write(result.CompressedData.Length);
+        //                    writer.Write(result.CompressedData);
+        //                    _copied_audio = ms.ToArray();
+
+        //                    long apOriginalSize = new FileInfo(_inputFilePath).Length;
+        //                    float apRatio = apOriginalSize > 0 ? (float)ms.Length / apOriginalSize * 100f : 0f;
+        //                    double apElapsed = (DateTime.Now - _compressionStartTime).TotalSeconds;
+        //                    float apSpeed = apElapsed > 0 ? (float)(result.TotalSamples / apElapsed) : 0f;
+
+        //                    _ratioHistory.Add(apRatio);
+        //                    _speedHistory.Add(apSpeed);
+
+        //                    UpdateProgressUI(99, result.TotalSamples, ms.Length);
+        //                }
+        //            });
+        //        }
+
+        //        // ===== نهاية الضغط =====
+        //        _chartTimer.Stop();
+        //        progressBar.Value = 100;
+        //        lblProgressPercent.Text = "100% — Done!";
+
+        //        if (_ratioHistory.Count > 0)
+        //        {
+        //            lblChartRatio.Text = $"Compression Ratio: {_ratioHistory[_ratioHistory.Count - 1]:F2}%";
+        //            DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
+        //        }
+        //        if (_speedHistory.Count > 0)
+        //        {
+        //            float finalSpeed = _speedHistory[_speedHistory.Count - 1];
+        //            lblChartSpeed.Text = finalSpeed >= 1000000
+        //                ? $"Processing Speed: {finalSpeed / 1000000:F2}M samples/sec"
+        //                : finalSpeed >= 1000
+        //                    ? $"Processing Speed: {finalSpeed / 1000:F1}K samples/sec"
+        //                    : $"Processing Speed: {finalSpeed:F0} samples/sec";
+        //            DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", _speedHistory.Max());
+        //        }
+
+        //        long originalSize = new FileInfo(_inputFilePath).Length;
+        //        long compressedSize = _copied_audio.Length;
+        //        double ratio = (double)originalSize / compressedSize;
+
+        //        MessageBox.Show($"Compressed to Memory!\n\n" +
+        //                        $"Original Size: {FormatBytes(originalSize)}\n" +
+        //                        $"In-Memory Size: {FormatBytes(compressedSize)}\n" +
+        //                        $"Compression Ratio: {ratio:F2}x",
+        //                        "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show($"Compression failed: {ex.Message}", "Error",
+        //            MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //    finally
+        //    {
+        //        _chartTimer.Stop();
+        //        btnRunCompression.Enabled = true;
+        //        btnRunDecompression.Enabled = true;
+        //        this.Cursor = Cursors.Default;
+        //    }
+        //}
+
+        private async void btnRunCompression_Click(object sender, EventArgs e)
         {
             string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(selectedAlgorithm)) return;
 
-            if (selectedAlgorithm == "DPCM")
+            try
             {
-                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
-                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+                btnRunCompression.Enabled = false;
+                btnRunDecompression.Enabled = false;
+                this.Cursor = Cursors.WaitCursor;
+                ResetProgressUI();
+                _chartTimer.Start();
+
+                // ===== الخوارزميات اللي تستخدم الـ interface =====
+                if (selectedAlgorithm != "Adaptive Predictive")
                 {
-                    targetSamplingRate = 16000;
+                    CompressionInterface algorithm = GetSelectedAlgorithm();
+                    if (algorithm == null)
+                    {
+                        MessageBox.Show("Please select a valid algorithm.", "Warning",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // اجمعي الـ parameters حسب الخوارزمية
+                    var parameters = new Dictionary<string, object>();
+                    float[] samples;
+                    int targetSampleRate = 16000;
+
+                    if (selectedAlgorithm == "DPCM")
+                    {
+                        string rateText = cmbSamplingRate.SelectedItem?.ToString() ?? cmbSamplingRate.Text;
+                        int.TryParse(rateText, out targetSampleRate);
+                        parameters["bits"] = (int)numQuantBits.Value;
+                        parameters["predictorType"] = cmbPredictorType.SelectedIndex;
+                    }
+                    else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+                    {
+                        string rateText = cmbSamplingRate.SelectedItem?.ToString() ?? cmbSamplingRate.Text;
+                        if (!int.TryParse(rateText, out targetSampleRate)) targetSampleRate = 8000;
+                        parameters["bitDepth"] = (int)numQuantBits.Value;
+                        bool useMono = cmbChannels == null || cmbChannels.SelectedIndex == 0;
+                        parameters["channels"] = useMono ? 1 : 0; // 0 = same as original
+                    }
+                    else if (selectedAlgorithm == "Delta Modulation")
+                    {
+                        string rateText = cmbSamplingRate.SelectedItem?.ToString() ?? cmbSamplingRate.Text;
+                        int.TryParse(rateText, out targetSampleRate);
+                        parameters["stepSize"] = (float)(double)numStepSize.Value;
+                        parameters["lpfCutoff"] = (int)numLpfCutoff.Value;
+                    }
+                    else if (selectedAlgorithm == "Adaptive Delta Modulation")
+                    {
+                        string rateText = cmbSamplingRate.SelectedItem?.ToString() ?? cmbSamplingRate.Text;
+                        int.TryParse(rateText, out targetSampleRate);
+                        parameters["initStepSize"] = (float)(double)numInitStepSize.Value;
+                        parameters["adaptationFactor"] = (float)(double)numAdaptationFactor.Value;
+                        parameters["maxStepSize"] = (float)(double)numMaxStepSize.Value;
+                        parameters["historyBits"] = (int)numHistoryBits.Value;
+                        parameters["lpfCutoff"] = (int)numLpfCutoff.Value;
+                    }
+
+                    // اقرأي الصوت
+                    using (var reader = new AudioFileReader(_inputFilePath))
+                    {
+                        int channels = 1;
+                        if ((selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+                            && parameters.ContainsKey("channels") && (int)parameters["channels"] == 0)
+                            channels = reader.WaveFormat.Channels;
+
+                        parameters["channels"] = channels;
+
+                        var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, channels));
+                        var sampleProvider = resampler.ToSampleProvider();
+                        int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate * channels);
+                        float[] buffer = new float[estimatedSamples + targetSampleRate];
+                        int samplesRead = sampleProvider.Read(buffer, 0, buffer.Length);
+                        samples = new float[samplesRead];
+                        Array.Copy(buffer, samples, samplesRead);
+                        parameters["totalSamples"] = samplesRead;
+                    }
+
+                    // شغّلي الضغط
+                    byte[] result = await Task.Run(() =>
+                        algorithm.Compress(samples, targetSampleRate, parameters,
+                            (percent, samplesProcessed, bytesWritten) =>
+                                UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+
+                    _copied_audio = result;
+
+                    // احفظي الـ metadata
+                    if (selectedAlgorithm == "DPCM")
+                    {
+                        _compressedMetadata = new DpcmMetadata
+                        {
+                            SampleRate = targetSampleRate,
+                            Bits = (byte)(int)parameters["bits"],
+                            TotalSamples = (int)parameters["totalSamples"]
+                        };
+                    }
+                    else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+                    {
+                        _compandingMetadata = new CompandingMetadata
+                        {
+                            Algorithm = selectedAlgorithm,
+                            OriginalExtension = Path.GetExtension(_inputFilePath),
+                            SampleRate = targetSampleRate,
+                            BitDepth = (byte)(int)parameters["bitDepth"],
+                            Channels = (int)parameters["channels"],
+                            TotalSamples = (int)parameters["totalSamples"]
+                        };
+                    }
+                    else if (selectedAlgorithm == "Delta Modulation")
+                    {
+                        _dmMetadata = new DmMetadata
+                        {
+                            SampleRate = targetSampleRate,
+                            TotalSamples = (int)parameters["totalSamples"],
+                            StepSize = (float)parameters["stepSize"],
+                            LpfCutoff = (int)parameters["lpfCutoff"],
+                            OriginalExtension = Path.GetExtension(_inputFilePath)
+                        };
+                    }
+                    else if (selectedAlgorithm == "Adaptive Delta Modulation")
+                    {
+                        _admMetadata = new AdmMetadata
+                        {
+                            SampleRate = targetSampleRate,
+                            TotalSamples = (int)parameters["totalSamples"],
+                            InitStepSize = (float)parameters["initStepSize"],
+                            AdaptationFactor = (float)parameters["adaptationFactor"],
+                            MaxStepSize = (float)parameters["maxStepSize"],
+                            HistoryBits = (int)parameters["historyBits"],
+                            LpfCutoff = (int)parameters["lpfCutoff"],
+                            OriginalExtension = Path.GetExtension(_inputFilePath)
+                        };
+                    }
                 }
 
-                int quantizationBits = (int)numQuantBits.Value;
-                int predictorType = cmbPredictorType.SelectedIndex == 1 ? 1 : 0;
-
-                try
+                // ===== Adaptive Predictive — ما عندها interface =====
+                else
                 {
-                    btnRunCompression.Enabled = false;
-                    this.Cursor = Cursors.WaitCursor;
-
-                    ExecuteDpcmCompressionToMemory(_inputFilePath, targetSamplingRate, quantizationBits, predictorType);
-
-                    long originalSize = new FileInfo(_inputFilePath).Length;
-                    long compressedSize = _copied_audio.Length;
-                    double ratio = (double)originalSize / compressedSize;
-
-                    string originalSizeFormatted = FormatBytes(originalSize);
-                    string compressedSizeFormatted = FormatBytes(compressedSize);
-
-                    MessageBox.Show($"Compressed to Memory!\n\n" +
-                                    $"Original Size: {originalSizeFormatted}\n" +
-                                    $"In-Memory Size: {compressedSizeFormatted}\n" +
-                                    $"Compression Ratio: {ratio:F2}x",
-                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    btnRunCompression.Enabled = true;
-                    this.Cursor = Cursors.Default;
-                }
-            }
-            else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
-            {
-                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
-                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
-                {
-                    targetSamplingRate = 8000;
-                }
-
-                int bitDepth = (int)numQuantBits.Value;
-                bool useMono = cmbChannels == null || cmbChannels.SelectedIndex == 0;
-
-                try
-                {
-                    btnRunCompression.Enabled = false;
-                    this.Cursor = Cursors.WaitCursor;
-
-                    ExecuteCompandingCompressionToMemory(_inputFilePath, selectedAlgorithm, targetSamplingRate, bitDepth, useMono);
-
-                    long originalSize = new FileInfo(_inputFilePath).Length;
-                    long compressedSize = _copied_audio.Length;
-                    double ratio = (double)originalSize / compressedSize;
-
-                    MessageBox.Show($"Compressed to Memory using {selectedAlgorithm}!\n\n" +
-                                    $"Returned File: {Path.GetFileNameWithoutExtension(_inputFilePath)}_{selectedAlgorithm.Replace("-", "").ToLower()}_compressed.wav\n" +
-                                    $"Returned Extension: .wav\n" +
-                                    $"Original Size: {FormatBytes(originalSize)}\n" +
-                                    $"Returned Size: {FormatBytes(compressedSize)}\n" +
-                                    $"Compression Ratio: {ratio:F2}x",
-                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    btnRunCompression.Enabled = true;
-                    this.Cursor = Cursors.Default;
-                }
-            }
-
-            else if (selectedAlgorithm == "Delta Modulation")
-            {
-                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
-                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
-                {
-                    targetSamplingRate = 16000;
-                }
-
-                double stepSize = (double)numStepSize.Value;
-                int lpfCutoff = (int)numLpfCutoff.Value;
-
-                try
-                {
-                    btnRunCompression.Enabled = false;
-                    this.Cursor = Cursors.WaitCursor;
-
-                    ExecuteDmCompressionToMemory(_inputFilePath, targetSamplingRate, stepSize, lpfCutoff);
-
-                    long originalSize = new FileInfo(_inputFilePath).Length;
-                    long compressedSize = _copied_audio.Length;
-                    double ratio = (double)originalSize / compressedSize;
-
-                    string originalSizeFormatted = FormatBytes(originalSize);
-                    string compressedSizeFormatted = FormatBytes(compressedSize);
-
-                    MessageBox.Show($"Compressed to Memory using DM!\n\n" +
-                                    $"Original Size: {originalSizeFormatted}\n" +
-                                    $"In-Memory Size: {compressedSizeFormatted}\n" +
-                                    $"Compression Ratio: {ratio:F2}x",
-                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    btnRunCompression.Enabled = true;
-                    this.Cursor = Cursors.Default;
-                }
-            }
-            else if (selectedAlgorithm == "Adaptive Delta Modulation")
-            {
-                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
-                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
-                {
-                    targetSamplingRate = 16000;
-                }
-
-                double initStepSize = (double)numInitStepSize.Value;
-                double adaptationFactor = (double)numAdaptationFactor.Value;
-                double maxStepSize = (double)numMaxStepSize.Value;
-                int historyBits = (int)numHistoryBits.Value;
-                int lpfCutoff = (int)numLpfCutoff.Value;
-
-                try
-                {
-                    btnRunCompression.Enabled = false;
-                    this.Cursor = Cursors.WaitCursor;
-
-                    ExecuteAdmCompressionToMemory(_inputFilePath, targetSamplingRate, initStepSize, adaptationFactor, maxStepSize, historyBits, lpfCutoff);
-
-                    long originalSize = new FileInfo(_inputFilePath).Length;
-                    long compressedSize = _copied_audio.Length;
-                    double ratio = (double)originalSize / compressedSize;
-
-                    string originalSizeFormatted = FormatBytes(originalSize);
-                    string compressedSizeFormatted = FormatBytes(compressedSize);
-
-                    MessageBox.Show($"Compressed to Memory using ADM!\n\n" +
-                                    $"Original Size: {originalSizeFormatted}\n" +
-                                    $"In-Memory Size: {compressedSizeFormatted}\n" +
-                                    $"Compression Ratio: {ratio:F2}x",
-                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    btnRunCompression.Enabled = true;
-                    this.Cursor = Cursors.Default;
-                }
-                
-            }
-            else if (selectedAlgorithm == "Adaptive Predictive")
-            {
-                try
-                {
-                    // 1. التأكد من أن الأدوات ليست فارغة قبل القراءة
                     if (cmbSampleRate.SelectedItem == null || numLevels == null || numPredictionOrder == null)
                     {
                         MessageBox.Show("خطأ: لم يتم تهيئة الأدوات بشكل صحيح.");
                         return;
                     }
 
-                    // 2. قراءة القيم
                     int sampleRate = int.Parse(cmbSampleRate.SelectedItem.ToString());
                     int levels = (int)numLevels.Value;
                     double stepSize = (double)numStep.Value;
-                    // استبدلي سطر الـ mode في btnRunCompression_Click بهذا:
                     string selectedModeText = cmbMode.SelectedItem.ToString();
-                    CompressionEngine.PredictionMode mode = (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), selectedModeText); bool isMono = chkIsMono.Checked;
+                    CompressionEngine.PredictionMode mode = (CompressionEngine.PredictionMode)
+                        Enum.Parse(typeof(CompressionEngine.PredictionMode), selectedModeText);
+                    bool isMono = chkIsMono.Checked;
                     int predictorOrder = (int)numPredictionOrder.Value;
 
-                    btnRunCompression.Enabled = false;
-                    this.Cursor = Cursors.WaitCursor;
-
-                    // 3. تنفيذ الضغط
-                    var result = ExecuteAdaptivePredictiveCompression(_inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
-
-                    // 4. معالجة البيانات والـ Header
-                    long compressedSize = 0;
-                    using (MemoryStream ms = new MemoryStream())
-                    using (BinaryWriter writer = new BinaryWriter(ms))
+                    await Task.Run(() =>
                     {
-                        writer.Write(levels);
-                        writer.Write((int)mode);
-                        writer.Write(stepSize);
-                        writer.Write(sampleRate);
-                        writer.Write(result.CompressedData.Length);
-                        writer.Write(result.CompressedData);
-                        _copied_audio = ms.ToArray();
-                        compressedSize = ms.Length; // الحجم الكلي مع الـ Header
-                    }
+                        var result = ExecuteAdaptivePredictiveCompression(
+                            _inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
 
-                    // 5. الحسابات
-                    long originalSize = new FileInfo(_inputFilePath).Length;
-                    long rawPcmSize = (long)result.TotalSamples * 2;
-                    double realRatio = (double)rawPcmSize / compressedSize;
+                        using (MemoryStream ms = new MemoryStream())
+                        using (BinaryWriter writer = new BinaryWriter(ms))
+                        {
+                            writer.Write(levels);
+                            writer.Write((int)mode);
+                            writer.Write(stepSize);
+                            writer.Write(sampleRate);
+                            writer.Write(result.CompressedData.Length);
+                            writer.Write(result.CompressedData);
+                            _copied_audio = ms.ToArray();
 
-                    // 6. ظهور الرسالة المطلوبة
-                    MessageBox.Show($"حجم الصوت الخام (Raw PCM): {rawPcmSize} بايت\n" +
-                                    $"الحجم النهائي (مع الـ Header): {compressedSize} بايت\n" +
-                                    $"نسبة الضغط الفعلية: {realRatio:F2}x", "تحليل الضغط");
+                            long apOriginalSize = new FileInfo(_inputFilePath).Length;
+                            float apRatio = apOriginalSize > 0 ? (float)ms.Length / apOriginalSize * 100f : 0f;
+                            double apElapsed = (DateTime.Now - _compressionStartTime).TotalSeconds;
+                            float apSpeed = apElapsed > 0 ? (float)(result.TotalSamples / apElapsed) : 0f;
+
+                            _ratioHistory.Add(apRatio);
+                            _speedHistory.Add(apSpeed);
+                            UpdateProgressUI(99, result.TotalSamples, ms.Length);
+                        }
+                    });
                 }
-                catch (Exception ex)
+
+                // ===== نهاية الضغط =====
+                _chartTimer.Stop();
+                progressBar.Value = 100;
+                lblProgressPercent.Text = "100% — Done!";
+
+                if (_ratioHistory.Count > 0)
                 {
-                    // إذا حدث أي خطأ (مثل قسمة على صفر أو ملف تالف)، ستظهر هذه الرسالة وتخبركِ بالسبب
-                    MessageBox.Show($"حدث خطأ أثناء الضغط: \n{ex.Message}\n{ex.StackTrace}", "خطأ في الضغط");
+                    lblChartRatio.Text = $"Compression Ratio: {_ratioHistory[_ratioHistory.Count - 1]:F2}%";
+                    DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
                 }
-                finally
+                if (_speedHistory.Count > 0)
                 {
-                    btnRunCompression.Enabled = true;
-                    this.Cursor = Cursors.Default;
+                    float finalSpeed = _speedHistory[_speedHistory.Count - 1];
+                    lblChartSpeed.Text = finalSpeed >= 1000000
+                        ? $"Processing Speed: {finalSpeed / 1000000:F2}M samples/sec"
+                        : finalSpeed >= 1000
+                            ? $"Processing Speed: {finalSpeed / 1000:F1}K samples/sec"
+                            : $"Processing Speed: {finalSpeed:F0} samples/sec";
+                    DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", _speedHistory.Max());
                 }
+
+                long originalSize = new FileInfo(_inputFilePath).Length;
+                long compressedSize = _copied_audio.Length;
+                double ratio = (double)originalSize / compressedSize;
+
+                MessageBox.Show($"Compressed to Memory!\n\n" +
+                                $"Original Size: {FormatBytes(originalSize)}\n" +
+                                $"In-Memory Size: {FormatBytes(compressedSize)}\n" +
+                                $"Compression Ratio: {ratio:F2}x",
+                                "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Compression failed: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _chartTimer.Stop();
+                btnRunCompression.Enabled = true;
+                btnRunDecompression.Enabled = true;
+                this.Cursor = Cursors.Default;
             }
         }
-     
+
+
 
         private string FormatBytes(long bytes)
         {
@@ -961,53 +1495,105 @@ namespace WindowsFormsApp2
             }
         }
 
-        private void ExecuteCompandingCompressionToMemory(string inputPath, string algorithm, int targetSampleRate, int bitDepth, bool useMono)
-        {
-            using (var reader = new AudioFileReader(inputPath))
-            using (var resampler = new MediaFoundationResampler(
-                reader,
-                new WaveFormat(targetSampleRate, 16, useMono ? 1 : reader.WaveFormat.Channels)))
-            {
-                var sampleProvider = resampler.ToSampleProvider();
-                float[] samples = ReadAllSamples(sampleProvider);
+        //private void ExecuteCompandingCompressionToMemory(string inputPath, string algorithm, int targetSampleRate, int bitDepth, bool useMono)
+        //{
+        //    using (var reader = new AudioFileReader(inputPath))
+        //    using (var resampler = new MediaFoundationResampler(
+        //        reader,
+        //        new WaveFormat(targetSampleRate, 16, useMono ? 1 : reader.WaveFormat.Channels)))
+        //    {
+        //        var sampleProvider = resampler.ToSampleProvider();
+        //        float[] samples = ReadAllSamples(sampleProvider);
 
-                if (samples.Length == 0)
-                {
-                    throw new InvalidOperationException("No audio samples were read from the copied file.");
-                }
+        //        if (samples.Length == 0)
+        //        {
+        //            throw new InvalidOperationException("No audio samples were read from the copied file.");
+        //        }
 
-                _originalSamples = new short[samples.Length];
-                byte[] compressedBytes = new byte[samples.Length];
+        //        _originalSamples = new short[samples.Length];
+        //        byte[] compressedBytes = new byte[samples.Length];
 
-                for (int i = 0; i < samples.Length; i++)
-                {
-                    _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, samples[i] * short.MaxValue));
+        //        for (int i = 0; i < samples.Length; i++)
+        //        {
+        //            _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, samples[i] * short.MaxValue));
 
-                    double companded =
-                        algorithm == "A-Law"
-                            ? ApplyALaw(samples[i])
-                            : ApplyMuLaw(samples[i]);
+        //            double companded =
+        //                algorithm == "A-Law"
+        //                    ? ApplyALaw(samples[i])
+        //                    : ApplyMuLaw(samples[i]);
 
-                    // The uploaded logic returns one 8-bit WAV byte for each quantized companded sample.
-                    compressedBytes[i] = QuantizeToByte(companded, bitDepth);
-                }
+        //            // The uploaded logic returns one 8-bit WAV byte for each quantized companded sample.
+        //            compressedBytes[i] = QuantizeToByte(companded, bitDepth);
+        //        }
 
-                _copied_audio = CreateCompressedWaveBytes(
-                    compressedBytes,
-                    sampleProvider.WaveFormat.SampleRate,
-                    sampleProvider.WaveFormat.Channels);
+        //        _copied_audio = CreateCompressedWaveBytes(
+        //            compressedBytes,
+        //            sampleProvider.WaveFormat.SampleRate,
+        //            sampleProvider.WaveFormat.Channels);
 
-                _compandingMetadata = new CompandingMetadata
-                {
-                    Algorithm = algorithm,
-                    OriginalExtension = Path.GetExtension(inputPath),
-                    SampleRate = sampleProvider.WaveFormat.SampleRate,
-                    BitDepth = (byte)bitDepth,
-                    Channels = sampleProvider.WaveFormat.Channels,
-                    TotalSamples = samples.Length
-                };
-            }
-        }
+        //        _compandingMetadata = new CompandingMetadata
+        //        {
+        //            Algorithm = algorithm,
+        //            OriginalExtension = Path.GetExtension(inputPath),
+        //            SampleRate = sampleProvider.WaveFormat.SampleRate,
+        //            BitDepth = (byte)bitDepth,
+        //            Channels = sampleProvider.WaveFormat.Channels,
+        //            TotalSamples = samples.Length
+        //        };
+        //    }
+        //}
+
+    //    private void ExecuteCompandingCompressionToMemory(string inputPath, string algorithm,
+    //int targetSampleRate, int bitDepth, bool useMono,
+    //Action<int, long, long> reportProgress = null)
+    //    {
+    //        using (var reader = new AudioFileReader(inputPath))
+    //        using (var resampler = new MediaFoundationResampler(
+    //            reader,
+    //            new WaveFormat(targetSampleRate, 16, useMono ? 1 : reader.WaveFormat.Channels)))
+    //        {
+    //            var sampleProvider = resampler.ToSampleProvider();
+    //            float[] samples = ReadAllSamples(sampleProvider);
+
+    //            if (samples.Length == 0)
+    //                throw new InvalidOperationException("No audio samples were read from the copied file.");
+
+    //            _originalSamples = new short[samples.Length];
+    //            byte[] compressedBytes = new byte[samples.Length];
+
+    //            for (int i = 0; i < samples.Length; i++)
+    //            {
+    //                _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, samples[i] * short.MaxValue));
+
+    //                double companded = algorithm == "A-Law"
+    //                    ? ApplyALaw(samples[i])
+    //                    : ApplyMuLaw(samples[i]);
+
+    //                compressedBytes[i] = QuantizeToByte(companded, bitDepth);
+
+    //                if (i % 1000 == 0 && reportProgress != null)
+    //                {
+    //                    int percent = (int)((double)i / samples.Length * 100);
+    //                    reportProgress(percent, i, i);
+    //                }
+    //            }
+
+    //            _copied_audio = CreateCompressedWaveBytes(
+    //                compressedBytes,
+    //                sampleProvider.WaveFormat.SampleRate,
+    //                sampleProvider.WaveFormat.Channels);
+
+    //            _compandingMetadata = new CompandingMetadata
+    //            {
+    //                Algorithm = algorithm,
+    //                OriginalExtension = Path.GetExtension(inputPath),
+    //                SampleRate = sampleProvider.WaveFormat.SampleRate,
+    //                BitDepth = (byte)bitDepth,
+    //                Channels = sampleProvider.WaveFormat.Channels,
+    //                TotalSamples = samples.Length
+    //            };
+    //        }
+    //    }
 
         private byte[] ExecuteCompandingDecompressionToMemory()
         {
@@ -1055,14 +1641,14 @@ namespace WindowsFormsApp2
             }
         }
 
-        private double ApplyMuLaw(double x)
-        {
-            double magnitude = Math.Abs(x);
+        //private double ApplyMuLaw(double x)
+        //{
+        //    double magnitude = Math.Abs(x);
 
-            return Math.Sign(x) *
-                   Math.Log(1.0 + MuLawMu * magnitude) /
-                   Math.Log(1.0 + MuLawMu);
-        }
+        //    return Math.Sign(x) *
+        //           Math.Log(1.0 + MuLawMu * magnitude) /
+        //           Math.Log(1.0 + MuLawMu);
+        //}
 
         private double InverseMuLaw(double y)
         {
@@ -1073,23 +1659,23 @@ namespace WindowsFormsApp2
                    MuLawMu;
         }
 
-        private double ApplyALaw(double x)
-        {
-            double magnitude = Math.Abs(x);
-            double denominator = 1.0 + Math.Log(ALawA);
-            double companded;
+        //private double ApplyALaw(double x)
+        //{
+        //    double magnitude = Math.Abs(x);
+        //    double denominator = 1.0 + Math.Log(ALawA);
+        //    double companded;
 
-            if (magnitude < 1.0 / ALawA)
-            {
-                companded = (ALawA * magnitude) / denominator;
-            }
-            else
-            {
-                companded = (1.0 + Math.Log(ALawA * magnitude)) / denominator;
-            }
+        //    if (magnitude < 1.0 / ALawA)
+        //    {
+        //        companded = (ALawA * magnitude) / denominator;
+        //    }
+        //    else
+        //    {
+        //        companded = (1.0 + Math.Log(ALawA * magnitude)) / denominator;
+        //    }
 
-            return Math.Sign(x) * companded;
-        }
+        //    return Math.Sign(x) * companded;
+        //}
 
         private double InverseALaw(double y)
         {
@@ -1110,38 +1696,38 @@ namespace WindowsFormsApp2
             return Math.Sign(y) * expanded;
         }
 
-        private byte QuantizeToByte(double sample, int bitDepth)
-        {
-            int usableBits = Math.Max(2, Math.Min(8, bitDepth));
-            int levels = 1 << usableBits;
-            double normalized = (Clamp(sample, -1.0, 1.0) + 1.0) / 2.0;
-            int index = (int)Math.Round(normalized * (levels - 1));
-            double quantized = index / (double)(levels - 1);
+        //private byte QuantizeToByte(double sample, int bitDepth)
+        //{
+        //    int usableBits = Math.Max(2, Math.Min(8, bitDepth));
+        //    int levels = 1 << usableBits;
+        //    double normalized = (Clamp(sample, -1.0, 1.0) + 1.0) / 2.0;
+        //    int index = (int)Math.Round(normalized * (levels - 1));
+        //    double quantized = index / (double)(levels - 1);
 
-            return (byte)Math.Round(quantized * 255);
-        }
+        //    return (byte)Math.Round(quantized * 255);
+        //}
 
         private double DequantizeByte(byte sample)
         {
             return (sample / 255.0) * 2.0 - 1.0;
         }
 
-        private float[] ReadAllSamples(ISampleProvider provider)
-        {
-            List<float> samples = new List<float>();
-            float[] buffer = new float[provider.WaveFormat.SampleRate * provider.WaveFormat.Channels];
-            int read;
+        //private float[] ReadAllSamples(ISampleProvider provider)
+        //{
+        //    List<float> samples = new List<float>();
+        //    float[] buffer = new float[provider.WaveFormat.SampleRate * provider.WaveFormat.Channels];
+        //    int read;
 
-            while ((read = provider.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                for (int i = 0; i < read; i++)
-                {
-                    samples.Add(buffer[i]);
-                }
-            }
+        //    while ((read = provider.Read(buffer, 0, buffer.Length)) > 0)
+        //    {
+        //        for (int i = 0; i < read; i++)
+        //        {
+        //            samples.Add(buffer[i]);
+        //        }
+        //    }
 
-            return samples.ToArray();
-        }
+        //    return samples.ToArray();
+        //}
 
         private byte[] ReadAllBytes(WaveStream reader)
         {
@@ -1160,21 +1746,21 @@ namespace WindowsFormsApp2
             return bytes.ToArray();
         }
 
-        private byte[] CreateCompressedWaveBytes(byte[] compressedBytes, int sampleRate, int channels)
-        {
-            WaveFormat format = new WaveFormat(sampleRate, 8, channels);
+        //private byte[] CreateCompressedWaveBytes(byte[] compressedBytes, int sampleRate, int channels)
+        //{
+        //    WaveFormat format = new WaveFormat(sampleRate, 8, channels);
 
-            using (MemoryStream stream = new MemoryStream())
-            {
-                using (WaveFileWriter writer = new WaveFileWriter(stream, format))
-                {
-                    // Compression returns a WAV file copy in memory instead of writing over the uploaded file.
-                    writer.Write(compressedBytes, 0, compressedBytes.Length);
-                }
+        //    using (MemoryStream stream = new MemoryStream())
+        //    {
+        //        using (WaveFileWriter writer = new WaveFileWriter(stream, format))
+        //        {
+        //            // Compression returns a WAV file copy in memory instead of writing over the uploaded file.
+        //            writer.Write(compressedBytes, 0, compressedBytes.Length);
+        //        }
 
-                return stream.ToArray();
-            }
-        }
+        //        return stream.ToArray();
+        //    }
+        //}
 
         private byte[] CreateDecompressedWaveBytes(float[] samples, int sampleRate, int channels)
         {
@@ -1212,256 +1798,439 @@ namespace WindowsFormsApp2
             return value;
         }
 
-        private void ExecuteDpcmCompressionToMemory(string inputPath, int targetSampleRate, int bits, int predictorType)
-        {
-            using (var reader = new AudioFileReader(inputPath))
-            {
-                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
-                var sampleProvider = resampler.ToSampleProvider();
+        //private void ExecuteDpcmCompressionToMemory(string inputPath, int targetSampleRate, int bits, int predictorType)
+        //{
+        //    using (var reader = new AudioFileReader(inputPath))
+        //    {
+        //        var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+        //        var sampleProvider = resampler.ToSampleProvider();
 
-                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
-                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
-                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+        //        int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+        //        float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+        //        int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
 
-                short[] pcmSamples = new short[samplesRead];
-                for (int i = 0; i < samplesRead; i++)
-                {
-                    pcmSamples[i] = (short)Math.Max(-32768, Math.Min(32767, floatBuffer[i] * 32767f));
-                }
+        //        short[] pcmSamples = new short[samplesRead];
+        //        for (int i = 0; i < samplesRead; i++)
+        //        {
+        //            pcmSamples[i] = (short)Math.Max(-32768, Math.Min(32767, floatBuffer[i] * 32767f));
+        //        }
 
-                using (MemoryStream ms = new MemoryStream())
-                using (BinaryWriter writer = new BinaryWriter(ms))
-                {
-                    short predictedValue = 0;
-                    short prevSample1 = 0;
-                    short prevSample2 = 0;
+        //        using (MemoryStream ms = new MemoryStream())
+        //        using (BinaryWriter writer = new BinaryWriter(ms))
+        //        {
+        //            short predictedValue = 0;
+        //            short prevSample1 = 0;
+        //            short prevSample2 = 0;
 
-                    int maxLevels = (int)Math.Pow(2, bits);
-                    int minQuantizedLevel = -(maxLevels / 2);
-                    int maxQuantizedLevel = (maxLevels / 2) - 1;
-                    short stepSize = (short)Math.Max(1, 32768 / (maxLevels * 2));
+        //            int maxLevels = (int)Math.Pow(2, bits);
+        //            int minQuantizedLevel = -(maxLevels / 2);
+        //            int maxQuantizedLevel = (maxLevels / 2) - 1;
+        //            short stepSize = (short)Math.Max(1, 32768 / (maxLevels * 2));
 
-                    for (int n = 0; n < samplesRead; n++)
-                    {
-                        if (predictorType == 0 || n < 2)
-                        {
-                            predictedValue = prevSample1;
-                        }
-                        else
-                        {
-                            predictedValue = (short)Math.Max(-32768, Math.Min(32767, (2 * prevSample1) - prevSample2));
-                        }
+        //            for (int n = 0; n < samplesRead; n++)
+        //            {
+        //                if (predictorType == 0 || n < 2)
+        //                {
+        //                    predictedValue = prevSample1;
+        //                }
+        //                else
+        //                {
+        //                    predictedValue = (short)Math.Max(-32768, Math.Min(32767, (2 * prevSample1) - prevSample2));
+        //                }
 
-                        int error = pcmSamples[n] - predictedValue;
-                        int quantizedErrorIndex = (int)Math.Round((double)error / stepSize);
-                        quantizedErrorIndex = Math.Max(minQuantizedLevel, Math.Min(maxQuantizedLevel, quantizedErrorIndex));
+        //                int error = pcmSamples[n] - predictedValue;
+        //                int quantizedErrorIndex = (int)Math.Round((double)error / stepSize);
+        //                quantizedErrorIndex = Math.Max(minQuantizedLevel, Math.Min(maxQuantizedLevel, quantizedErrorIndex));
 
-                        int reconstructedError = quantizedErrorIndex * stepSize;
-                        int reconstructedSample = predictedValue + reconstructedError;
-                        reconstructedSample = Math.Max(-32768, Math.Min(32767, reconstructedSample));
+        //                int reconstructedError = quantizedErrorIndex * stepSize;
+        //                int reconstructedSample = predictedValue + reconstructedError;
+        //                reconstructedSample = Math.Max(-32768, Math.Min(32767, reconstructedSample));
 
-                        writer.Write((short)quantizedErrorIndex);
+        //                writer.Write((short)quantizedErrorIndex);
 
-                        prevSample2 = prevSample1;
-                        prevSample1 = (short)reconstructedSample;
-                    }
+        //                prevSample2 = prevSample1;
+        //                prevSample1 = (short)reconstructedSample;
+        //            }
 
-                    writer.Flush();
-                    _copied_audio = ms.ToArray();
+        //            writer.Flush();
+        //            _copied_audio = ms.ToArray();
 
-                    _compressedMetadata = new DpcmMetadata
-                    {
-                        SampleRate = targetSampleRate,
-                        Bits = (byte)bits,
-                        TotalSamples = samplesRead
-                    };
-                }
-            }
-        }
-
-
-        private void ExecuteDmCompressionToMemory(string inputPath, int targetSampleRate, double stepSize, int lpfCutoff)
-        {
-            using (var reader = new AudioFileReader(inputPath))
-            {
-                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
-                var sampleProvider = resampler.ToSampleProvider();
-
-                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
-                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
-                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
-                _dmMetadata = new DmMetadata
-                {
-                    SampleRate = targetSampleRate,
-                    TotalSamples = samplesRead,
-                    StepSize = (float)stepSize,
-                    LpfCutoff = lpfCutoff,
-                    OriginalExtension = Path.GetExtension(inputPath)
-                };
-                float[] audioSamples = new float[samplesRead];
-                Array.Copy(floatBuffer, audioSamples, samplesRead);
-                _originalSamples = new short[samplesRead];
-
-                for (int i = 0; i < samplesRead; i++)
-                {
-                    _originalSamples[i] = (short)Math.Max(
-                        short.MinValue,
-                        Math.Min(short.MaxValue, audioSamples[i] * 32767f));
-                }
-                using (MemoryStream ms = new MemoryStream())
-                using (BinaryWriter writer = new BinaryWriter(ms))
-                {
-                    float predictedValue = 0f;
-                    float step = (float)stepSize;
-
-                    byte currentByte = 0;
-                    int bitCounter = 0;
-
-                    for (int n = 0; n < samplesRead; n++)
-                    {
-                        int bit;
-                        if (audioSamples[n] >= predictedValue)
-                        {
-                            bit = 1;
-                            predictedValue += step; 
-                        }
-                        else
-                        {
-                            bit = 0;
-                            predictedValue -= step;
-                        }
-
-                        currentByte |= (byte)(bit << (7 - bitCounter));
-                        bitCounter++;
-
-                        if (bitCounter == 8)
-                        {
-                            writer.Write(currentByte);
-                            currentByte = 0;
-                            bitCounter = 0;
-                        }
-                    }
-
-                    if (bitCounter > 0)
-                    {
-                        writer.Write(currentByte);
-                    }
-
-                    writer.Flush();
-                    _copied_audio = ms.ToArray();
-
-                }
-            }
-        }
+        //            _compressedMetadata = new DpcmMetadata
+        //            {
+        //                SampleRate = targetSampleRate,
+        //                Bits = (byte)bits,
+        //                TotalSamples = samplesRead
+        //            };
+        //        }
+        //    }
+        //}
 
 
-        private void ExecuteAdmCompressionToMemory(string inputPath, int targetSampleRate, double initStepSize, double adaptationFactor, double maxStepSize, int historyBits, int lpfCutoff)
-        {
-            using (var reader = new AudioFileReader(inputPath))
-            {
-                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
-                var sampleProvider = resampler.ToSampleProvider();
+        //private void ExecuteDmCompressionToMemory(string inputPath, int targetSampleRate, double stepSize, int lpfCutoff)
+        //{
+        //    using (var reader = new AudioFileReader(inputPath))
+        //    {
+        //        var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+        //        var sampleProvider = resampler.ToSampleProvider();
 
-                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
-                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
-                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
-                _admMetadata = new AdmMetadata
-                {
-                    SampleRate = targetSampleRate,
-                    TotalSamples = samplesRead,
-                    InitStepSize = (float)initStepSize,
-                    AdaptationFactor = (float)adaptationFactor,
-                    MaxStepSize = (float)maxStepSize,
-                    HistoryBits = historyBits,
-                    LpfCutoff = lpfCutoff,
-                    OriginalExtension = Path.GetExtension(inputPath)
-                };
-                float[] audioSamples = new float[samplesRead];
-                Array.Copy(floatBuffer, audioSamples, samplesRead);
-                _originalSamples = new short[samplesRead];
+        //        int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+        //        float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+        //        int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+        //        _dmMetadata = new DmMetadata
+        //        {
+        //            SampleRate = targetSampleRate,
+        //            TotalSamples = samplesRead,
+        //            StepSize = (float)stepSize,
+        //            LpfCutoff = lpfCutoff,
+        //            OriginalExtension = Path.GetExtension(inputPath)
+        //        };
+        //        float[] audioSamples = new float[samplesRead];
+        //        Array.Copy(floatBuffer, audioSamples, samplesRead);
+        //        _originalSamples = new short[samplesRead];
 
-                for (int i = 0; i < samplesRead; i++)
-                {
-                    _originalSamples[i] = (short)Math.Max(
-                        short.MinValue,
-                        Math.Min(short.MaxValue, audioSamples[i] * 32767f));
-                }
-                using (MemoryStream ms = new MemoryStream())
-                using (BinaryWriter writer = new BinaryWriter(ms))
-                {
-                    float predictedValue = 0f;
-                    float currentStepSize = (float)initStepSize;
-                    float minStep = (float)initStepSize;
-                    float maxStep = (float)maxStepSize;
-                    float K = (float)adaptationFactor;
+        //        for (int i = 0; i < samplesRead; i++)
+        //        {
+        //            _originalSamples[i] = (short)Math.Max(
+        //                short.MinValue,
+        //                Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+        //        }
+        //        using (MemoryStream ms = new MemoryStream())
+        //        using (BinaryWriter writer = new BinaryWriter(ms))
+        //        {
+        //            float predictedValue = 0f;
+        //            float step = (float)stepSize;
 
-                    int[] historyPattern = new int[historyBits];
+        //            byte currentByte = 0;
+        //            int bitCounter = 0;
 
-                    byte currentByte = 0;
-                    int bitCounter = 0;
+        //            for (int n = 0; n < samplesRead; n++)
+        //            {
+        //                int bit;
+        //                if (audioSamples[n] >= predictedValue)
+        //                {
+        //                    bit = 1;
+        //                    predictedValue += step; 
+        //                }
+        //                else
+        //                {
+        //                    bit = 0;
+        //                    predictedValue -= step;
+        //                }
 
-                    for (int n = 0; n < samplesRead; n++)
-                    {
-                        int bit;
-                        if (audioSamples[n] >= predictedValue)
-                        {
-                            bit = 1;
-                            predictedValue += currentStepSize;
-                        }
-                        else
-                        {
-                            bit = 0;
-                            predictedValue -= currentStepSize;
-                        }
+        //                currentByte |= (byte)(bit << (7 - bitCounter));
+        //                bitCounter++;
 
-                        for (int i = historyBits - 1; i > 0; i--)
-                        {
-                            historyPattern[i] = historyPattern[i - 1];
-                        }
-                        historyPattern[0] = bit;
+        //                if (bitCounter == 8)
+        //                {
+        //                    writer.Write(currentByte);
+        //                    currentByte = 0;
+        //                    bitCounter = 0;
+        //                }
+        //            }
 
-                        if (n >= historyBits - 1)
-                        {
-                            bool allSame = true;
-                            bool alternating = true;
+        //            if (bitCounter > 0)
+        //            {
+        //                writer.Write(currentByte);
+        //            }
 
-                            for (int i = 1; i < historyBits; i++)
-                            {
-                                if (historyPattern[i] != historyPattern[0]) allSame = false;
-                                if (historyPattern[i] == historyPattern[i - 1]) alternating = false;
-                            }
+        //            writer.Flush();
+        //            _copied_audio = ms.ToArray();
 
-                            if (allSame)
-                            {
-                                currentStepSize = Math.Min(maxStep, currentStepSize * K);
-                            }
-                            else if (alternating)
-                            {
-                                currentStepSize = Math.Max(minStep, currentStepSize / K);
-                            }
-                        }
+        //        }
+        //    }
+        //}
 
-                        currentByte |= (byte)(bit << (7 - bitCounter));
-                        bitCounter++;
+    //    private void ExecuteDmCompressionToMemory(string inputPath, int targetSampleRate,
+    //double stepSize, int lpfCutoff,
+    //Action<int, long, long> reportProgress = null)
+    //    {
+    //        using (var reader = new AudioFileReader(inputPath))
+    //        {
+    //            var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+    //            var sampleProvider = resampler.ToSampleProvider();
 
-                        if (bitCounter == 8)
-                        {
-                            writer.Write(currentByte);
-                            currentByte = 0;
-                            bitCounter = 0;
-                        }
-                    }
+    //            int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+    //            float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+    //            int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
 
-                    if (bitCounter > 0)
-                    {
-                        writer.Write(currentByte);
-                    }
+    //            _dmMetadata = new DmMetadata
+    //            {
+    //                SampleRate = targetSampleRate,
+    //                TotalSamples = samplesRead,
+    //                StepSize = (float)stepSize,
+    //                LpfCutoff = lpfCutoff,
+    //                OriginalExtension = Path.GetExtension(inputPath)
+    //            };
 
-                    writer.Flush();
-                    _copied_audio = ms.ToArray();
-                }
-            }
-        }
+    //            float[] audioSamples = new float[samplesRead];
+    //            Array.Copy(floatBuffer, audioSamples, samplesRead);
+    //            _originalSamples = new short[samplesRead];
+
+    //            for (int i = 0; i < samplesRead; i++)
+    //                _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+
+    //            using (MemoryStream ms = new MemoryStream())
+    //            using (BinaryWriter writer = new BinaryWriter(ms))
+    //            {
+    //                float predictedValue = 0f;
+    //                float step = (float)stepSize;
+    //                byte currentByte = 0;
+    //                int bitCounter = 0;
+
+    //                for (int n = 0; n < samplesRead; n++)
+    //                {
+    //                    int bit;
+    //                    if (audioSamples[n] >= predictedValue)
+    //                    {
+    //                        bit = 1;
+    //                        predictedValue += step;
+    //                    }
+    //                    else
+    //                    {
+    //                        bit = 0;
+    //                        predictedValue -= step;
+    //                    }
+
+    //                    currentByte |= (byte)(bit << (7 - bitCounter));
+    //                    bitCounter++;
+
+    //                    if (bitCounter == 8)
+    //                    {
+    //                        writer.Write(currentByte);
+    //                        currentByte = 0;
+    //                        bitCounter = 0;
+    //                    }
+
+    //                    if (n % 1000 == 0 && reportProgress != null)
+    //                    {
+    //                        int percent = (int)((double)n / samplesRead * 100);
+    //                        reportProgress(percent, n, ms.Length);
+    //                    }
+    //                }
+
+    //                if (bitCounter > 0)
+    //                    writer.Write(currentByte);
+
+    //                writer.Flush();
+    //                _copied_audio = ms.ToArray();
+    //            }
+    //        }
+    //    }
+
+
+        //private void ExecuteAdmCompressionToMemory(string inputPath, int targetSampleRate, double initStepSize, double adaptationFactor, double maxStepSize, int historyBits, int lpfCutoff)
+        //{
+        //    using (var reader = new AudioFileReader(inputPath))
+        //    {
+        //        var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+        //        var sampleProvider = resampler.ToSampleProvider();
+
+        //        int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+        //        float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+        //        int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+        //        _admMetadata = new AdmMetadata
+        //        {
+        //            SampleRate = targetSampleRate,
+        //            TotalSamples = samplesRead,
+        //            InitStepSize = (float)initStepSize,
+        //            AdaptationFactor = (float)adaptationFactor,
+        //            MaxStepSize = (float)maxStepSize,
+        //            HistoryBits = historyBits,
+        //            LpfCutoff = lpfCutoff,
+        //            OriginalExtension = Path.GetExtension(inputPath)
+        //        };
+        //        float[] audioSamples = new float[samplesRead];
+        //        Array.Copy(floatBuffer, audioSamples, samplesRead);
+        //        _originalSamples = new short[samplesRead];
+
+        //        for (int i = 0; i < samplesRead; i++)
+        //        {
+        //            _originalSamples[i] = (short)Math.Max(
+        //                short.MinValue,
+        //                Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+        //        }
+        //        using (MemoryStream ms = new MemoryStream())
+        //        using (BinaryWriter writer = new BinaryWriter(ms))
+        //        {
+        //            float predictedValue = 0f;
+        //            float currentStepSize = (float)initStepSize;
+        //            float minStep = (float)initStepSize;
+        //            float maxStep = (float)maxStepSize;
+        //            float K = (float)adaptationFactor;
+
+        //            int[] historyPattern = new int[historyBits];
+
+        //            byte currentByte = 0;
+        //            int bitCounter = 0;
+
+        //            for (int n = 0; n < samplesRead; n++)
+        //            {
+        //                int bit;
+        //                if (audioSamples[n] >= predictedValue)
+        //                {
+        //                    bit = 1;
+        //                    predictedValue += currentStepSize;
+        //                }
+        //                else
+        //                {
+        //                    bit = 0;
+        //                    predictedValue -= currentStepSize;
+        //                }
+
+        //                for (int i = historyBits - 1; i > 0; i--)
+        //                {
+        //                    historyPattern[i] = historyPattern[i - 1];
+        //                }
+        //                historyPattern[0] = bit;
+
+        //                if (n >= historyBits - 1)
+        //                {
+        //                    bool allSame = true;
+        //                    bool alternating = true;
+
+        //                    for (int i = 1; i < historyBits; i++)
+        //                    {
+        //                        if (historyPattern[i] != historyPattern[0]) allSame = false;
+        //                        if (historyPattern[i] == historyPattern[i - 1]) alternating = false;
+        //                    }
+
+        //                    if (allSame)
+        //                    {
+        //                        currentStepSize = Math.Min(maxStep, currentStepSize * K);
+        //                    }
+        //                    else if (alternating)
+        //                    {
+        //                        currentStepSize = Math.Max(minStep, currentStepSize / K);
+        //                    }
+        //                }
+
+        //                currentByte |= (byte)(bit << (7 - bitCounter));
+        //                bitCounter++;
+
+        //                if (bitCounter == 8)
+        //                {
+        //                    writer.Write(currentByte);
+        //                    currentByte = 0;
+        //                    bitCounter = 0;
+        //                }
+        //            }
+
+        //            if (bitCounter > 0)
+        //            {
+        //                writer.Write(currentByte);
+        //            }
+
+        //            writer.Flush();
+        //            _copied_audio = ms.ToArray();
+        //        }
+        //    }
+        //}
+
+    //    private void ExecuteAdmCompressionToMemory(string inputPath, int targetSampleRate,
+    //double initStepSize, double adaptationFactor, double maxStepSize,
+    //int historyBits, int lpfCutoff,
+    //Action<int, long, long> reportProgress = null)
+    //    {
+    //        using (var reader = new AudioFileReader(inputPath))
+    //        {
+    //            var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, 1));
+    //            var sampleProvider = resampler.ToSampleProvider();
+
+    //            int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate);
+    //            float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+    //            int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+
+    //            _admMetadata = new AdmMetadata
+    //            {
+    //                SampleRate = targetSampleRate,
+    //                TotalSamples = samplesRead,
+    //                InitStepSize = (float)initStepSize,
+    //                AdaptationFactor = (float)adaptationFactor,
+    //                MaxStepSize = (float)maxStepSize,
+    //                HistoryBits = historyBits,
+    //                LpfCutoff = lpfCutoff,
+    //                OriginalExtension = Path.GetExtension(inputPath)
+    //            };
+
+    //            float[] audioSamples = new float[samplesRead];
+    //            Array.Copy(floatBuffer, audioSamples, samplesRead);
+    //            _originalSamples = new short[samplesRead];
+
+    //            for (int i = 0; i < samplesRead; i++)
+    //                _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, audioSamples[i] * 32767f));
+
+    //            using (MemoryStream ms = new MemoryStream())
+    //            using (BinaryWriter writer = new BinaryWriter(ms))
+    //            {
+    //                float predictedValue = 0f;
+    //                float currentStepSize = (float)initStepSize;
+    //                float minStep = (float)initStepSize;
+    //                float maxStep = (float)maxStepSize;
+    //                float K = (float)adaptationFactor;
+    //                int[] historyPattern = new int[historyBits];
+    //                byte currentByte = 0;
+    //                int bitCounter = 0;
+
+    //                for (int n = 0; n < samplesRead; n++)
+    //                {
+    //                    int bit;
+    //                    if (audioSamples[n] >= predictedValue)
+    //                    {
+    //                        bit = 1;
+    //                        predictedValue += currentStepSize;
+    //                    }
+    //                    else
+    //                    {
+    //                        bit = 0;
+    //                        predictedValue -= currentStepSize;
+    //                    }
+
+    //                    for (int i = historyBits - 1; i > 0; i--)
+    //                        historyPattern[i] = historyPattern[i - 1];
+    //                    historyPattern[0] = bit;
+
+    //                    if (n >= historyBits - 1)
+    //                    {
+    //                        bool allSame = true;
+    //                        bool alternating = true;
+
+    //                        for (int i = 1; i < historyBits; i++)
+    //                        {
+    //                            if (historyPattern[i] != historyPattern[0]) allSame = false;
+    //                            if (historyPattern[i] == historyPattern[i - 1]) alternating = false;
+    //                        }
+
+    //                        if (allSame)
+    //                            currentStepSize = Math.Min(maxStep, currentStepSize * K);
+    //                        else if (alternating)
+    //                            currentStepSize = Math.Max(minStep, currentStepSize / K);
+    //                    }
+
+    //                    currentByte |= (byte)(bit << (7 - bitCounter));
+    //                    bitCounter++;
+
+    //                    if (bitCounter == 8)
+    //                    {
+    //                        writer.Write(currentByte);
+    //                        currentByte = 0;
+    //                        bitCounter = 0;
+    //                    }
+
+    //                    if (n % 1000 == 0 && reportProgress != null)
+    //                    {
+    //                        int percent = (int)((double)n / samplesRead * 100);
+    //                        reportProgress(percent, n, ms.Length);
+    //                    }
+    //                }
+
+    //                if (bitCounter > 0)
+    //                    writer.Write(currentByte);
+
+    //                writer.Flush();
+    //                _copied_audio = ms.ToArray();
+    //            }
+    //        }
+    //    }
 
 
         private void btnRunDecompression_Click(object sender, EventArgs e)
@@ -1774,6 +2543,210 @@ namespace WindowsFormsApp2
             waveOut.Play();
         }
         */
+
+
+
+        // REQUIREMENT 7
+        private void UpdateProgressUI(int percent, long samplesProcessed, long bytesWritten)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+                return;
+            }
+
+            progressBar.Value = Math.Min(percent, 100);
+            lblProgressPercent.Text = $"{percent}%";
+
+            if (_originalFileSize > 0 && bytesWritten > 0)
+            {
+                float ratio = (float)bytesWritten / _originalFileSize * 100f;
+                _ratioHistory.Add(ratio);
+            }
+
+            double elapsed = (DateTime.Now - _compressionStartTime).TotalSeconds;
+            if (elapsed > 0)
+            {
+                float speed = (float)(samplesProcessed / elapsed);
+                _speedHistory.Add(speed);
+            }
+        }
+
+        private void DrawChart(PictureBox box, List<float> data, Color lineColor, string label, float maxValue)
+        {
+            int w = box.Width;
+            int h = box.Height;
+            Bitmap bmp = new Bitmap(w, h);
+
+            int paddingLeft = 55;
+            int paddingBottom = 30;
+            int paddingTop = 15;
+            int paddingRight = 15;
+
+            int chartW = w - paddingLeft - paddingRight;
+            int chartH = h - paddingBottom - paddingTop;
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+
+                /// خلفية الـ chart
+                g.Clear(Color.White);
+
+                // خلفية منطقة الرسم
+                using (SolidBrush chartBg = new SolidBrush(Color.FromArgb(245, 245, 245)))
+                    g.FillRectangle(chartBg, paddingLeft, paddingTop, chartW, chartH);
+
+                using (Font font = new Font("Consolas", 7.5f))
+                using (Pen gridPen = new Pen(Color.FromArgb(210, 210, 210), 1))
+                using (Pen tickPen = new Pen(Color.FromArgb(100, 100, 100), 1))
+                using (Pen borderPen = new Pen(Color.FromArgb(150, 150, 150), 1))
+                using (Brush textBrush = new SolidBrush(Color.FromArgb(60, 60, 60)))
+                {
+                    // border
+                    g.DrawRectangle(borderPen, paddingLeft, paddingTop, chartW, chartH);
+
+                    // Y axis — 5 grid lines + ticks + labels
+                    for (int i = 0; i <= 5; i++)
+                    {
+                        float val = maxValue * i / 5f;
+                        int y = paddingTop + chartH - (int)(chartH * i / 5f);
+
+                        // grid line
+                        g.DrawLine(gridPen, paddingLeft + 1, y, paddingLeft + chartW - 1, y);
+
+                        // ticks على اليسار
+                        g.DrawLine(tickPen, paddingLeft - 5, y, paddingLeft, y);
+                        // ticks على اليمين
+                        g.DrawLine(tickPen, paddingLeft + chartW, y, paddingLeft + chartW + 5, y);
+
+                        // قيمة Y
+                        string valText = maxValue >= 100000
+                            ? $"{val / 1000:F0}K"
+                            : maxValue >= 1000
+                                ? $"{val / 1000:F1}K"
+                                : $"{val:F1}";
+
+                        SizeF textSize = g.MeasureString(valText, font);
+                        g.DrawString(valText, font, textBrush,
+                            paddingLeft - textSize.Width - 6,
+                            y - textSize.Height / 2);
+                    }
+
+                    // X axis — 5 ticks + labels
+                    int xTicks = Math.Min(5, data.Count - 1);
+                    if (xTicks > 0)
+                    {
+                        for (int i = 0; i <= xTicks; i++)
+                        {
+                            int x = paddingLeft + (int)(chartW * i / (float)xTicks);
+
+                            // grid line
+                            g.DrawLine(gridPen, x, paddingTop + 1, x, paddingTop + chartH - 1);
+
+                            // ticks فوق
+                            g.DrawLine(tickPen, x, paddingTop - 5, x, paddingTop);
+                            // ticks تحت
+                            g.DrawLine(tickPen, x, paddingTop + chartH, x, paddingTop + chartH + 5);
+
+                            // قيمة X
+                            int dataIndex = (data.Count - 1) * i / xTicks;
+                            string xLabel = $"{dataIndex}";
+                            SizeF textSize = g.MeasureString(xLabel, font);
+                            g.DrawString(xLabel, font, textBrush,
+                                x - textSize.Width / 2,
+                                paddingTop + chartH + 8);
+                        }
+                    }
+
+                    // الخط نفسه
+                    if (data.Count >= 2)
+                    {
+                        // ظل تحت الخط
+                        using (System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath())
+                        {
+                            float xStep = (float)chartW / (data.Count - 1);
+
+                            path.StartFigure();
+                            path.AddLine(paddingLeft, paddingTop + chartH,
+                                         paddingLeft, paddingTop + chartH);
+
+                            for (int i = 0; i < data.Count; i++)
+                            {
+                                float x = paddingLeft + i * xStep;
+                                float y = paddingTop + chartH - (data[i] / maxValue * chartH);
+                                y = Math.Max(paddingTop, Math.Min(paddingTop + chartH, y));
+                                path.AddLine(x, y, x, y);
+                            }
+
+                            float lastX = paddingLeft + (data.Count - 1) * xStep;
+                            path.AddLine(lastX, paddingTop + chartH, lastX, paddingTop + chartH);
+                            path.CloseFigure();
+
+                            using (SolidBrush fillBrush = new SolidBrush(
+                                Color.FromArgb(40, lineColor.R, lineColor.G, lineColor.B)))
+                                g.FillPath(fillBrush, path);
+                        }
+
+                        // الخط الرئيسي
+                        using (Pen linePen = new Pen(lineColor, 2))
+                        {
+                            linePen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
+                            float xStep = (float)chartW / (data.Count - 1);
+
+                            for (int i = 1; i < data.Count; i++)
+                            {
+                                float x1 = paddingLeft + (i - 1) * xStep;
+                                float y1 = paddingTop + chartH - (data[i - 1] / maxValue * chartH);
+                                float x2 = paddingLeft + i * xStep;
+                                float y2 = paddingTop + chartH - (data[i] / maxValue * chartH);
+
+                                y1 = Math.Max(paddingTop, Math.Min(paddingTop + chartH, y1));
+                                y2 = Math.Max(paddingTop, Math.Min(paddingTop + chartH, y2));
+
+                                g.DrawLine(linePen, x1, y1, x2, y2);
+                            }
+                        }
+
+                        // نقطة آخر قيمة
+                        if (data.Count > 0)
+                        {
+                            float xStep = (float)chartW / (data.Count - 1);
+                            float dotX = paddingLeft + (data.Count - 1) * xStep;
+                            float dotY = paddingTop + chartH - (data[data.Count - 1] / maxValue * chartH);
+                            dotY = Math.Max(paddingTop, Math.Min(paddingTop + chartH, dotY));
+
+                            using (SolidBrush dotBrush = new SolidBrush(Color.White))
+                                g.FillEllipse(dotBrush, dotX - 4, dotY - 4, 8, 8);
+                            using (SolidBrush dotCore = new SolidBrush(lineColor))
+                                g.FillEllipse(dotCore, dotX - 2, dotY - 2, 4, 4);
+                        }
+                    }
+                }
+            }
+
+            if (box.Image != null) box.Image.Dispose();
+            box.Image = bmp;
+        }
+
+
+        private void ResetProgressUI()
+        {
+            _ratioHistory.Clear();
+            _speedHistory.Clear();
+            _originalFileSize = new FileInfo(_inputFilePath).Length;
+            _compressionStartTime = DateTime.Now;
+            progressBar.Value = 0;
+            lblProgressPercent.Text = "Starting...";
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+       
     }
 
 

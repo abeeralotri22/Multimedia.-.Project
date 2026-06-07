@@ -149,6 +149,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdaptiveDeltaModulationAlgorithm.cs" />
+    <Compile Include="AdaptivePredictiveAlgorithm.cs" />
+    <Compile Include="ALawAlgorithm.cs" />
     <Compile Include="AudioInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -159,12 +162,16 @@
     <Compile Include="CompressionForm.Designer.cs">
       <DependentUpon>CompressionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CompressionInterface.cs" />
+    <Compile Include="DcmpAlgorithm.cs" />
+    <Compile Include="DeltaModulationAlgorithm.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="MuLawAlgorithm.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="AudioInfoForm.resx">

@@ -168,17 +168,28 @@ namespace WindowsFormsApp2
             this.pnlParameters = new System.Windows.Forms.Panel();
             this.btnRunCompression = new System.Windows.Forms.Button();
             this.btnRunDecompression = new System.Windows.Forms.Button();
+            this.lblProgressPercent = new System.Windows.Forms.Label();
+            this.lblChartRatio = new System.Windows.Forms.Label();
+            this.lblChartSpeed = new System.Windows.Forms.Label();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.chartCompressRatio = new System.Windows.Forms.PictureBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.chartSpeed = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.waveformPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantBits)).BeginInit();
             this.pnlParameters.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chartCompressRatio)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartSpeed)).BeginInit();
             this.SuspendLayout();
             // 
             // PlayAudiobtn
             // 
-            this.PlayAudiobtn.Location = new System.Drawing.Point(260, 301);
-            this.PlayAudiobtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.PlayAudiobtn.Location = new System.Drawing.Point(334, 376);
+            this.PlayAudiobtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PlayAudiobtn.Name = "PlayAudiobtn";
-            this.PlayAudiobtn.Size = new System.Drawing.Size(152, 48);
+            this.PlayAudiobtn.Size = new System.Drawing.Size(195, 60);
             this.PlayAudiobtn.TabIndex = 0;
             this.PlayAudiobtn.Text = "Play Audio ▶︎ ";
             this.PlayAudiobtn.UseVisualStyleBackColor = true;
@@ -188,11 +199,10 @@ namespace WindowsFormsApp2
             // 
             this.DragDropLabel.AllowDrop = true;
             this.DragDropLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
-            this.DragDropLabel.Location = new System.Drawing.Point(22, 20);
-            this.DragDropLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.DragDropLabel.Location = new System.Drawing.Point(28, 25);
             this.DragDropLabel.Name = "DragDropLabel";
-            this.DragDropLabel.Padding = new System.Windows.Forms.Padding(9, 10, 9, 10);
-            this.DragDropLabel.Size = new System.Drawing.Size(390, 74);
+            this.DragDropLabel.Padding = new System.Windows.Forms.Padding(12);
+            this.DragDropLabel.Size = new System.Drawing.Size(501, 92);
             this.DragDropLabel.TabIndex = 1;
             this.DragDropLabel.Text = "Drag and drop here";
             this.DragDropLabel.DragDrop += new System.Windows.Forms.DragEventHandler(this.DragDropLabel_DragDrop);
@@ -201,20 +211,20 @@ namespace WindowsFormsApp2
             // waveformPictureBox
             // 
             this.waveformPictureBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.waveformPictureBox.Location = new System.Drawing.Point(25, 98);
-            this.waveformPictureBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.waveformPictureBox.Location = new System.Drawing.Point(32, 129);
+            this.waveformPictureBox.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.waveformPictureBox.Name = "waveformPictureBox";
-            this.waveformPictureBox.Size = new System.Drawing.Size(1295, 188);
+            this.waveformPictureBox.Size = new System.Drawing.Size(1664, 234);
             this.waveformPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.waveformPictureBox.TabIndex = 3;
             this.waveformPictureBox.TabStop = false;
             // 
             // InsertAudiobtn
             // 
-            this.InsertAudiobtn.Location = new System.Drawing.Point(460, 20);
-            this.InsertAudiobtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.InsertAudiobtn.Location = new System.Drawing.Point(591, 25);
+            this.InsertAudiobtn.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.InsertAudiobtn.Name = "InsertAudiobtn";
-            this.InsertAudiobtn.Size = new System.Drawing.Size(152, 48);
+            this.InsertAudiobtn.Size = new System.Drawing.Size(195, 60);
             this.InsertAudiobtn.TabIndex = 4;
             this.InsertAudiobtn.Text = "Insert Audio";
             this.InsertAudiobtn.UseVisualStyleBackColor = true;
@@ -224,10 +234,11 @@ namespace WindowsFormsApp2
             // 
             this.InfoLabel.AutoSize = true;
             this.InfoLabel.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.InfoLabel.Location = new System.Drawing.Point(22, 301);
+            this.InfoLabel.Location = new System.Drawing.Point(28, 376);
+            this.InfoLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.InfoLabel.Name = "InfoLabel";
-            this.InfoLabel.Padding = new System.Windows.Forms.Padding(11, 10, 11, 10);
-            this.InfoLabel.Size = new System.Drawing.Size(139, 37);
+            this.InfoLabel.Padding = new System.Windows.Forms.Padding(14, 12, 14, 12);
+            this.InfoLabel.Size = new System.Drawing.Size(163, 44);
             this.InfoLabel.TabIndex = 5;
             this.InfoLabel.Text = "Audio Information";
             // 
@@ -241,10 +252,10 @@ namespace WindowsFormsApp2
             "Delta Modulation",
             "Adaptive Delta Modulation",
             "Adaptive Predictive"});
-            this.cmbAlgorithmType.Location = new System.Drawing.Point(910, 340);
-            this.cmbAlgorithmType.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.cmbAlgorithmType.Location = new System.Drawing.Point(1170, 425);
+            this.cmbAlgorithmType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbAlgorithmType.Name = "cmbAlgorithmType";
-            this.cmbAlgorithmType.Size = new System.Drawing.Size(331, 24);
+            this.cmbAlgorithmType.Size = new System.Drawing.Size(424, 28);
             this.cmbAlgorithmType.TabIndex = 7;
             this.cmbAlgorithmType.SelectedIndexChanged += new System.EventHandler(this.cmbAlgorithmType_SelectedIndexChanged);
             // 
@@ -254,17 +265,17 @@ namespace WindowsFormsApp2
             this.cmbPredictorType.Items.AddRange(new object[] {
             "First-Order (Previous Sample)",
             "Second-Order (Linear Extrapolation)"});
-            this.cmbPredictorType.Location = new System.Drawing.Point(63, 80);
-            this.cmbPredictorType.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.cmbPredictorType.Location = new System.Drawing.Point(81, 100);
+            this.cmbPredictorType.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbPredictorType.Name = "cmbPredictorType";
-            this.cmbPredictorType.Size = new System.Drawing.Size(141, 24);
+            this.cmbPredictorType.Size = new System.Drawing.Size(180, 28);
             this.cmbPredictorType.TabIndex = 1;
             this.cmbPredictorType.Text = "Predictor Type";
             // 
             // numQuantBits
             // 
-            this.numQuantBits.Location = new System.Drawing.Point(64, 48);
-            this.numQuantBits.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.numQuantBits.Location = new System.Drawing.Point(82, 60);
+            this.numQuantBits.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numQuantBits.Maximum = new decimal(new int[] {
             8,
             0,
@@ -276,7 +287,7 @@ namespace WindowsFormsApp2
             0,
             0});
             this.numQuantBits.Name = "numQuantBits";
-            this.numQuantBits.Size = new System.Drawing.Size(140, 24);
+            this.numQuantBits.Size = new System.Drawing.Size(180, 26);
             this.numQuantBits.TabIndex = 3;
             this.numQuantBits.Value = new decimal(new int[] {
             2,
@@ -295,10 +306,10 @@ namespace WindowsFormsApp2
             "8000",
             "",
             ""});
-            this.cmbSamplingRate.Location = new System.Drawing.Point(63, 14);
-            this.cmbSamplingRate.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.cmbSamplingRate.Location = new System.Drawing.Point(81, 18);
+            this.cmbSamplingRate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmbSamplingRate.Name = "cmbSamplingRate";
-            this.cmbSamplingRate.Size = new System.Drawing.Size(141, 24);
+            this.cmbSamplingRate.Size = new System.Drawing.Size(180, 28);
             this.cmbSamplingRate.TabIndex = 0;
             this.cmbSamplingRate.Text = "Sampling Rate";
             // 
@@ -309,18 +320,18 @@ namespace WindowsFormsApp2
             this.pnlParameters.Controls.Add(this.cmbSamplingRate);
             this.pnlParameters.Controls.Add(this.numQuantBits);
             this.pnlParameters.Controls.Add(this.cmbPredictorType);
-            this.pnlParameters.Location = new System.Drawing.Point(910, 384);
-            this.pnlParameters.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pnlParameters.Location = new System.Drawing.Point(1170, 480);
+            this.pnlParameters.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlParameters.Name = "pnlParameters";
-            this.pnlParameters.Size = new System.Drawing.Size(331, 155);
+            this.pnlParameters.Size = new System.Drawing.Size(426, 194);
             this.pnlParameters.TabIndex = 8;
             // 
             // btnRunCompression
             // 
-            this.btnRunCompression.Location = new System.Drawing.Point(695, 340);
-            this.btnRunCompression.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnRunCompression.Location = new System.Drawing.Point(894, 425);
+            this.btnRunCompression.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRunCompression.Name = "btnRunCompression";
-            this.btnRunCompression.Size = new System.Drawing.Size(182, 28);
+            this.btnRunCompression.Size = new System.Drawing.Size(234, 35);
             this.btnRunCompression.TabIndex = 9;
             this.btnRunCompression.Text = "Compress";
             this.btnRunCompression.UseVisualStyleBackColor = true;
@@ -328,20 +339,99 @@ namespace WindowsFormsApp2
             // 
             // btnRunDecompression
             // 
-            this.btnRunDecompression.Location = new System.Drawing.Point(695, 384);
-            this.btnRunDecompression.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnRunDecompression.Location = new System.Drawing.Point(894, 480);
+            this.btnRunDecompression.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnRunDecompression.Name = "btnRunDecompression";
-            this.btnRunDecompression.Size = new System.Drawing.Size(182, 28);
+            this.btnRunDecompression.Size = new System.Drawing.Size(234, 35);
             this.btnRunDecompression.TabIndex = 10;
             this.btnRunDecompression.Text = "Decompress";
             this.btnRunDecompression.UseVisualStyleBackColor = true;
             this.btnRunDecompression.Click += new System.EventHandler(this.btnRunDecompression_Click);
             // 
+            // lblProgressPercent
+            // 
+            this.lblProgressPercent.Location = new System.Drawing.Point(1397, 908);
+            this.lblProgressPercent.Name = "lblProgressPercent";
+            this.lblProgressPercent.Size = new System.Drawing.Size(424, 25);
+            this.lblProgressPercent.TabIndex = 12;
+            this.lblProgressPercent.Text = "Ready";
+            this.lblProgressPercent.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblChartRatio
+            // 
+            this.lblChartRatio.Location = new System.Drawing.Point(675, 850);
+            this.lblChartRatio.Name = "lblChartRatio";
+            this.lblChartRatio.Size = new System.Drawing.Size(200, 25);
+            this.lblChartRatio.TabIndex = 13;
+            this.lblChartRatio.Text = "Compression Ratio %";
+            // 
+            // lblChartSpeed
+            // 
+            this.lblChartSpeed.Location = new System.Drawing.Point(28, 850);
+            this.lblChartSpeed.Name = "lblChartSpeed";
+            this.lblChartSpeed.Size = new System.Drawing.Size(200, 25);
+            this.lblChartSpeed.TabIndex = 15;
+            this.lblChartSpeed.Text = "Processing Speed (samples/sec)";
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(1401, 953);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(424, 30);
+            this.progressBar.TabIndex = 11;
+            // 
+            // label1
+            // 
+            this.label1.Location = new System.Drawing.Point(0, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(100, 23);
+            this.label1.TabIndex = 12;
+            // 
+            // label2
+            // 
+            this.label2.Location = new System.Drawing.Point(0, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(100, 23);
+            this.label2.TabIndex = 13;
+            // 
+            // chartCompressRatio
+            // 
+            this.chartCompressRatio.BackColor = System.Drawing.Color.White;
+            this.chartCompressRatio.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.chartCompressRatio.Location = new System.Drawing.Point(679, 890);
+            this.chartCompressRatio.Name = "chartCompressRatio";
+            this.chartCompressRatio.Size = new System.Drawing.Size(563, 381);
+            this.chartCompressRatio.TabIndex = 14;
+            this.chartCompressRatio.TabStop = false;
+            // 
+            // label3
+            // 
+            this.label3.Location = new System.Drawing.Point(0, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(100, 23);
+            this.label3.TabIndex = 15;
+            // 
+            // chartSpeed
+            // 
+            this.chartSpeed.BackColor = System.Drawing.Color.White;
+            this.chartSpeed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.chartSpeed.Location = new System.Drawing.Point(32, 890);
+            this.chartSpeed.Name = "chartSpeed";
+            this.chartSpeed.Size = new System.Drawing.Size(564, 381);
+            this.chartSpeed.TabIndex = 16;
+            this.chartSpeed.TabStop = false;
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1496, 844);
+            this.ClientSize = new System.Drawing.Size(2131, 1303);
+            this.Controls.Add(this.progressBar);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.chartCompressRatio);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.chartSpeed);
             this.Controls.Add(this.btnRunDecompression);
             this.Controls.Add(this.btnRunCompression);
             this.Controls.Add(this.pnlParameters);
@@ -351,7 +441,10 @@ namespace WindowsFormsApp2
             this.Controls.Add(this.waveformPictureBox);
             this.Controls.Add(this.DragDropLabel);
             this.Controls.Add(this.PlayAudiobtn);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Controls.Add(this.lblProgressPercent);
+            this.Controls.Add(this.lblChartRatio);
+            this.Controls.Add(this.lblChartSpeed);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
@@ -359,6 +452,8 @@ namespace WindowsFormsApp2
             ((System.ComponentModel.ISupportInitialize)(this.waveformPictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantBits)).EndInit();
             this.pnlParameters.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chartCompressRatio)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartSpeed)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -378,5 +473,14 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.Panel pnlParameters;
         private System.Windows.Forms.Button btnRunCompression;
         private System.Windows.Forms.Button btnRunDecompression;
+        private System.Windows.Forms.Label lblProgressPercent;
+        private System.Windows.Forms.Label lblChartRatio;
+        private System.Windows.Forms.Label lblChartSpeed;
+        private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.PictureBox chartCompressRatio;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.PictureBox chartSpeed;
     }
 }
