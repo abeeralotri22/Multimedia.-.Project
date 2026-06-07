@@ -427,6 +427,7 @@ namespace WindowsFormsApp2
             pnlParameters.Enabled = true;
             btnRunCompression.Enabled = true;
             btnRunDecompression.Enabled = true;
+            PlayAudiobtn.Enabled = true;
             _ratioHistory.Clear();
             _speedHistory.Clear();
             progressBar.Value = 0;
@@ -1340,6 +1341,10 @@ namespace WindowsFormsApp2
                         _cancellationTokenSource.Token));
 
                     _copied_audio = result;
+
+                    PlayAudiobtn.Enabled = false;
+                    btnRunCompression.Enabled = false;
+
                     if (_cancellationTokenSource.IsCancellationRequested)
                     {
                         progressBar.Value = 0;
@@ -1488,13 +1493,21 @@ namespace WindowsFormsApp2
                 MessageBox.Show($"Compression failed: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            //finally
+            //{
+            //    _chartTimer.Stop();
+            //    btnCancelCompression.Enabled = false;
+            //    btnRunCompression.Enabled = true;
+            //    btnRunDecompression.Enabled = true;
+            //    this.Cursor = Cursors.Default;
+            //}
             finally
             {
                 _chartTimer.Stop();
                 btnCancelCompression.Enabled = false;
-                btnRunCompression.Enabled = true;
                 btnRunDecompression.Enabled = true;
                 this.Cursor = Cursors.Default;
+                // لا تعيدي تفعيل btnRunCompression هون
             }
         }
 
@@ -2319,9 +2332,16 @@ namespace WindowsFormsApp2
             {
                 MessageBox.Show($"Decompression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            //finally
+            //{
+            //    btnRunDecompression.Enabled = true;
+            //    this.Cursor = Cursors.Default;
+            //}
             finally
             {
                 btnRunDecompression.Enabled = true;
+                btnRunCompression.Enabled = true;
+                PlayAudiobtn.Enabled = true;
                 this.Cursor = Cursors.Default;
             }
         }
@@ -2580,9 +2600,10 @@ namespace WindowsFormsApp2
 
             if (_originalFileSize > 0 && bytesWritten > 0)
             {
-                float ratio = (float)bytesWritten / _originalFileSize * 100f;
+                float ratio = ((float)bytesWritten / _originalFileSize) * 100f;
                 _ratioHistory.Add(ratio);
             }
+
 
             double elapsed = (DateTime.Now - _compressionStartTime).TotalSeconds;
             if (elapsed > 0)

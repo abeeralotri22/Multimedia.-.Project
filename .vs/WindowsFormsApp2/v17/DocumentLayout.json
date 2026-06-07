@@ -3,24 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|c:\\users\\legion\\visual studio projects\\c#\\multimediacompressaudio\\multimedia.-.project\\dcmpalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:dcmpalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\mulawalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:mulawalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\deltamodulationalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:deltamodulationalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\dcmpalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|solutionrelative:dcmpalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{5B04B802-6DAC-4F04-A06A-19568E109446}|WindowsFormsApp2.csproj|C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\alawalgorithm.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -54,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -65,13 +57,30 @@
               "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
             },
             {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
+              "Title": "DcmpAlgorithm.cs",
+              "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DcmpAlgorithm.cs",
+              "RelativeDocumentMoniker": "DcmpAlgorithm.cs",
+              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DcmpAlgorithm.cs*",
+              "RelativeToolTip": "DcmpAlgorithm.cs*",
+              "ViewState": "AgIAADAAAAAAAAAAAAAkwDgAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-07T14:31:28.398Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "ALawAlgorithm.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\ALawAlgorithm.cs",
               "RelativeDocumentMoniker": "ALawAlgorithm.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\ALawAlgorithm.cs*",
-              "RelativeToolTip": "ALawAlgorithm.cs*",
+              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\ALawAlgorithm.cs",
+              "RelativeToolTip": "ALawAlgorithm.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAAAACAAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-07T11:48:04.644Z",
@@ -79,76 +88,37 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "DcmpAlgorithm.cs",
-              "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DcmpAlgorithm.cs",
-              "RelativeDocumentMoniker": "DcmpAlgorithm.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DcmpAlgorithm.cs*",
-              "RelativeToolTip": "DcmpAlgorithm.cs*",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAuwDsAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-07T10:54:50.095Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "DeltaModulationAlgorithm.cs",
-              "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DeltaModulationAlgorithm.cs",
-              "RelativeDocumentMoniker": "DeltaModulationAlgorithm.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\DeltaModulationAlgorithm.cs*",
-              "RelativeToolTip": "DeltaModulationAlgorithm.cs*",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAuwDUAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-07T11:48:36.78Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "MuLawAlgorithm.cs",
-              "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\MuLawAlgorithm.cs",
-              "RelativeDocumentMoniker": "MuLawAlgorithm.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\MuLawAlgorithm.cs",
-              "RelativeToolTip": "MuLawAlgorithm.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAkwCAAAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-07T11:47:26.788Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
               "Title": "Form1.cs [Design]",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs [Design]*",
-              "RelativeToolTip": "Form1.cs [Design]*",
+              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs [Design]",
+              "RelativeToolTip": "Form1.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-07T10:25:55.081Z",
               "EditorCaption": " [Design]"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs*",
-              "RelativeToolTip": "Form1.cs*",
-              "ViewState": "AgIAAMAFAAAAAAAAAAAuwOUFAAAAAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.cs",
+              "RelativeToolTip": "Form1.cs",
+              "ViewState": "AgIAAKkBAAAAAAAAAAAkwLYBAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-07T10:25:57.011Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
               "Title": "AdaptiveDeltaModulationAlgorithm.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\AdaptiveDeltaModulationAlgorithm.cs",
               "RelativeDocumentMoniker": "AdaptiveDeltaModulationAlgorithm.cs",
-              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\AdaptiveDeltaModulationAlgorithm.cs*",
-              "RelativeToolTip": "AdaptiveDeltaModulationAlgorithm.cs*",
+              "ToolTip": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\AdaptiveDeltaModulationAlgorithm.cs",
+              "RelativeToolTip": "AdaptiveDeltaModulationAlgorithm.cs",
               "ViewState": "AgIAADYAAAAAAAAAAAAuwE0AAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-07T11:49:01.179Z",
@@ -156,7 +126,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 5,
               "Title": "Form1.Designer.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\Form1.Designer.cs",
               "RelativeDocumentMoniker": "Form1.Designer.cs",
@@ -168,12 +138,8 @@
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 6,
               "Title": "AdaptivePredictiveAlgorithm.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\AdaptivePredictiveAlgorithm.cs",
               "RelativeDocumentMoniker": "AdaptivePredictiveAlgorithm.cs",
@@ -186,7 +152,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 7,
               "Title": "CompressionInterface.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\CompressionInterface.cs",
               "RelativeDocumentMoniker": "CompressionInterface.cs",
@@ -199,7 +165,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 8,
               "Title": "CompressionEngine.cs",
               "DocumentMoniker": "C:\\Users\\LEGION\\visual studio projects\\c#\\multimediaCompressAudio\\Multimedia.-.Project\\CompressionEngine.cs",
               "RelativeDocumentMoniker": "CompressionEngine.cs",
