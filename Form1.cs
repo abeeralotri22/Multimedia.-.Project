@@ -31,6 +31,7 @@ namespace WindowsFormsApp2
         private bool isPlaying = false;
         private const double MuLawMu = 255.0;
         private const double ALawA = 87.6;
+        
 
         // ALGORITHMS
         private string _inputFilePath;
@@ -41,6 +42,9 @@ namespace WindowsFormsApp2
         private AdmMetadata _admMetadata = null;
         private CompandingMetadata _compandingMetadata = null;
         private byte[] _decompressedPcmBytes = null;
+        private bool _isDecompressed = false;
+        private RawSourceWaveStream _decompressedStream = null;
+        private long _decompressedTotalBytes = 0;
 
         private short[] _originalSamples = null;
 
@@ -214,40 +218,121 @@ namespace WindowsFormsApp2
         }
 
 
+        //private void PlayAudiobtn_Click(object sender, EventArgs e)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrEmpty(audioPath))
+        //        {
+        //            MessageBox.Show("Please insert an audio file first.",
+        //                "No Audio Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //            return;
+        //        }
+
+        //        if (!isPlaying)
+        //        {
+        //            if (outputDevice == null || outputDevice.PlaybackState == PlaybackState.Stopped)
+        //            {
+        //                audioFile?.Dispose();
+        //                outputDevice?.Dispose();
+
+        //                audioFile = new AudioFileReader(audioPath);
+        //                outputDevice = new WaveOutEvent();
+        //                outputDevice.Init(audioFile);
+        //            }
+
+        //            outputDevice.Play();
+        //            playbackTimer.Start();
+        //            PlayAudiobtn.Text = "Pause ❚❚";
+        //            isPlaying = true;
+        //        }
+        //        else
+        //        {
+        //            outputDevice.Pause();
+        //            playbackTimer.Stop();
+        //            PlayAudiobtn.Text = "Play Audio ▶︎";
+        //            isPlaying = false;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString());
+        //    }
+        //}
+
         private void PlayAudiobtn_Click(object sender, EventArgs e)
         {
             try
             {
-                if (string.IsNullOrEmpty(audioPath))
+                if (_isDecompressed && _decompressedPcmBytes != null)
                 {
-                    MessageBox.Show("Please insert an audio file first.",
-                        "No Audio Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
-                if (!isPlaying)
-                {
-                    if (outputDevice == null || outputDevice.PlaybackState == PlaybackState.Stopped)
+                    // Play decompressed PCM
+                    if (!isPlaying)
                     {
-                        audioFile?.Dispose();
-                        outputDevice?.Dispose();
+                        if (outputDevice == null || outputDevice.PlaybackState == PlaybackState.Stopped)
+                        {
+                            outputDevice?.Dispose();
 
-                        audioFile = new AudioFileReader(audioPath);
-                        outputDevice = new WaveOutEvent();
-                        outputDevice.Init(audioFile);
+                            int sampleRate = GetDecompressedSampleRate();
+                            var waveFormat = new WaveFormat(sampleRate, 16, 1);
+                            var memStream = new MemoryStream(_decompressedPcmBytes);
+                            var rawStream = new RawSourceWaveStream(memStream, waveFormat);
+
+                            // Keep reference so we can track position for the playhead
+                            _decompressedStream = rawStream;
+                            _decompressedTotalBytes = _decompressedPcmBytes.Length;
+
+                            outputDevice = new WaveOutEvent();
+                            outputDevice.Init(rawStream);
+                        }
+
+                        outputDevice.Play();
+                        playbackTimer.Start();
+                        PlayAudiobtn.Text = "Pause ❚❚";
+                        isPlaying = true;
                     }
-
-                    outputDevice.Play();
-                    playbackTimer.Start();
-                    PlayAudiobtn.Text = "Pause ❚❚";
-                    isPlaying = true;
+                    else
+                    {
+                        outputDevice.Pause();
+                        playbackTimer.Stop();
+                        PlayAudiobtn.Text = "Play Audio ▶︎";
+                        isPlaying = false;
+                    }
                 }
                 else
                 {
-                    outputDevice.Pause();
-                    playbackTimer.Stop();
-                    PlayAudiobtn.Text = "Play Audio ▶︎";
-                    isPlaying = false;
+                    // Original flow — play from file
+                    if (string.IsNullOrEmpty(audioPath))
+                    {
+                        MessageBox.Show("Please insert an audio file first.",
+                            "No Audio Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+
+                    if (!isPlaying)
+                    {
+                        if (outputDevice == null || outputDevice.PlaybackState == PlaybackState.Stopped)
+                        {
+                            audioFile?.Dispose();
+                            outputDevice?.Dispose();
+
+                            audioFile = new AudioFileReader(audioPath);
+                            outputDevice = new WaveOutEvent();
+                            outputDevice.Init(audioFile);
+                        }
+
+                        outputDevice.Play();
+                        playbackTimer.Start();
+                        PlayAudiobtn.Text = "Pause ❚❚";
+                        isPlaying = true;
+                    }
+                    else
+                    {
+                        outputDevice.Pause();
+                        playbackTimer.Stop();
+                        PlayAudiobtn.Text = "Play Audio ▶︎";
+                        isPlaying = false;
+                    }
                 }
             }
             catch (Exception ex)
@@ -304,9 +389,79 @@ namespace WindowsFormsApp2
             waveformPictureBox.Image = (Bitmap)bmp.Clone();
         }
 
+
+        private void DrawWaveformFromPcm(byte[] pcmBytes, int sampleRate)
+        {
+            int width = waveformPictureBox.Width;
+            int height = waveformPictureBox.Height;
+            Bitmap bmp = new Bitmap(width, height);
+
+            int totalSamples = pcmBytes.Length / 2; // 16-bit = 2 bytes per sample
+            int samplesPerPixel = Math.Max(1, totalSamples / width);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.White);
+                using (Pen pen = new Pen(Color.DarkGreen)) // green = decompressed
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int startSample = x * samplesPerPixel;
+                        float max = 0f;
+
+                        for (int i = 0; i < samplesPerPixel; i++)
+                        {
+                            int idx = (startSample + i) * 2;
+                            if (idx + 1 >= pcmBytes.Length) break;
+                            short sample = BitConverter.ToInt16(pcmBytes, idx);
+                            float normalized = Math.Abs(sample / 32768f);
+                            if (normalized > max) max = normalized;
+                        }
+
+                        int y = (int)(max * height / 2);
+                        g.DrawLine(pen, x, height / 2 - y, x, height / 2 + y);
+                    }
+                }
+            }
+
+            if (waveformBitmap != null) waveformBitmap.Dispose();
+            waveformBitmap = bmp;
+
+            if (waveformPictureBox.Image != null) waveformPictureBox.Image.Dispose();
+            waveformPictureBox.Image = (Bitmap)bmp.Clone();
+        }
+
+
+        //private void PlaybackTimer_Tick(object sender, EventArgs e)
+        //{
+        //    if (audioFile == null || waveformBitmap == null) return;
+
+        //    if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Stopped)
+        //    {
+        //        playbackTimer.Stop();
+        //        isPlaying = false;
+        //        PlayAudiobtn.Text = "Play Audio ▶︎";
+        //        return;
+        //    }
+
+        //    Bitmap frame = (Bitmap)waveformBitmap.Clone();
+        //    using (Graphics g = Graphics.FromImage(frame))
+        //    {
+        //        double progress = audioFile.CurrentTime.TotalSeconds / audioFile.TotalTime.TotalSeconds;
+        //        int x = (int)(progress * waveformPictureBox.Width);
+        //        g.DrawLine(Pens.Red, x, 0, x, waveformPictureBox.Height);
+        //    }
+
+        //    if (waveformPictureBox.Image != null)
+        //        waveformPictureBox.Image.Dispose();
+
+        //    waveformPictureBox.Image = frame;
+        //}
+
+
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
-            if (audioFile == null || waveformBitmap == null) return;
+            if (waveformBitmap == null) return;
 
             if (outputDevice != null && outputDevice.PlaybackState == PlaybackState.Stopped)
             {
@@ -316,19 +471,28 @@ namespace WindowsFormsApp2
                 return;
             }
 
+            double progress = 0;
+
+            if (_isDecompressed && _decompressedStream != null && _decompressedTotalBytes > 0)
+            {
+                progress = (double)_decompressedStream.Position / _decompressedTotalBytes;
+            }
+            else if (audioFile != null)
+            {
+                progress = audioFile.CurrentTime.TotalSeconds / audioFile.TotalTime.TotalSeconds;
+            }
+
             Bitmap frame = (Bitmap)waveformBitmap.Clone();
             using (Graphics g = Graphics.FromImage(frame))
             {
-                double progress = audioFile.CurrentTime.TotalSeconds / audioFile.TotalTime.TotalSeconds;
                 int x = (int)(progress * waveformPictureBox.Width);
                 g.DrawLine(Pens.Red, x, 0, x, waveformPictureBox.Height);
             }
 
-            if (waveformPictureBox.Image != null)
-                waveformPictureBox.Image.Dispose();
-
+            if (waveformPictureBox.Image != null) waveformPictureBox.Image.Dispose();
             waveformPictureBox.Image = frame;
         }
+
 
         private void InsertAudiobtn_Click(object sender, EventArgs e)
         {
@@ -428,6 +592,9 @@ namespace WindowsFormsApp2
             btnRunCompression.Enabled = true;
             btnRunDecompression.Enabled = true;
             PlayAudiobtn.Enabled = true;
+            _isDecompressed = false;
+            _decompressedStream = null;
+
             _ratioHistory.Clear();
             _speedHistory.Clear();
             progressBar.Value = 0;
@@ -2290,22 +2457,39 @@ namespace WindowsFormsApp2
                 {
                     ExecuteDpcmDecompressionToMemory();
                 }
+                //else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+                //{
+                //    byte[] returnedFile = ExecuteCompandingDecompressionToMemory();
+                //    double compandingMse = CalculateMSE();
+
+                //    MessageBox.Show(
+                //        $"Audio decompressed completely using {selectedAlgorithm}!\n\n" +
+                //        $"Returned File: {_compandingMetadata.Algorithm.Replace("-", "").ToLower()}_decompressed.wav\n" +
+                //        $"Returned Extension: .wav\n" +
+                //        $"Returned Size: {FormatBytes(returnedFile.Length)}\n" +
+                //        $"MSE: {compandingMse:F2}\n\n" +
+                //        $"Status: Ready for playing or processing.",
+                //        "Success",
+                //        MessageBoxButtons.OK,
+                //        MessageBoxIcon.Information);
+
+                //    return;
+                //}
                 else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
                 {
                     byte[] returnedFile = ExecuteCompandingDecompressionToMemory();
                     double compandingMse = CalculateMSE();
 
+                    // _decompressedPcmBytes is now set inside ExecuteCompandingDecompressionToMemory
+                    _isDecompressed = true;
+                    DrawWaveformFromPcm(_decompressedPcmBytes, _compandingMetadata.SampleRate);
+
                     MessageBox.Show(
                         $"Audio decompressed completely using {selectedAlgorithm}!\n\n" +
-                        $"Returned File: {_compandingMetadata.Algorithm.Replace("-", "").ToLower()}_decompressed.wav\n" +
-                        $"Returned Extension: .wav\n" +
                         $"Returned Size: {FormatBytes(returnedFile.Length)}\n" +
                         $"MSE: {compandingMse:F2}\n\n" +
-                        $"Status: Ready for playing or processing.",
-                        "Success",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-
+                        $"Status: Ready for playing.",
+                        "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 else if (selectedAlgorithm == "Delta Modulation")
@@ -2344,22 +2528,65 @@ namespace WindowsFormsApp2
 
                     _decompressedPcmBytes = new byte[pcmResult.Length * 2];
                     Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+
+                }
+
+                //else if (selectedAlgorithm == "Adaptive Predictive")
+                //{
+                //    if (_originalSamples == null)
+                //    {
+                //        MessageBox.Show("Original audio samples weren't stored during compression.",
+                //            "Data Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //        btnRunDecompression.Enabled = true;
+                //        this.Cursor = Cursors.Default;
+                //        return;
+                //    }
+
+                //    CompressionEngine engine = new CompressionEngine();
+                //    short[] pcmResult = engine.Decompress(
+                //        _copied_audio,
+                //        (int)numLevels.Value,
+                //        (CompressionEngine.PredictionMode)Enum.Parse(
+                //            typeof(CompressionEngine.PredictionMode), cmbMode.Text),
+                //        (double)numStep.Value,
+                //        _originalSamples.Length,
+                //        (int)numPredictionOrder.Value
+                //    );
+
+                //    _decompressedPcmBytes = new byte[pcmResult.Length * 2];
+                //    Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+
+                //    // Get the sample rate from the UI (AP has no metadata class)
+                //    int apSampleRate = 16000;
+                //    if (cmbSampleRate?.SelectedItem != null)
+                //        int.TryParse(cmbSampleRate.SelectedItem.ToString(), out apSampleRate);
+
+                //    _isDecompressed = true;
+                //    DrawWaveformFromPcm(_decompressedPcmBytes, apSampleRate);
+                //}
+
+                
+
+
+
+                // after all the else if branches
+                if (!_isDecompressed && _decompressedPcmBytes != null)
+                {
+                    _isDecompressed = true;
+                    DrawWaveformFromPcm(_decompressedPcmBytes, GetDecompressedSampleRate());
                 }
 
                 long decompressedSize = _decompressedPcmBytes.Length;
-                string decompressedSizeFormatted = FormatBytes(decompressedSize);
-
                 double mse = CalculateMSE();
-
                 MessageBox.Show(
                     $"Audio decompressed completely in memory!\n\n" +
-                    $"Decompressed Size: {decompressedSizeFormatted}\n" +
+                    $"Decompressed Size: {FormatBytes(decompressedSize)}\n" +
                     $"MSE: {mse:F2}\n\n" +
                     $"Status: Ready for playing or processing.",
-                    "Success",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
             }
+
             catch (Exception ex)
             {
                 MessageBox.Show($"Decompression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2425,6 +2652,9 @@ namespace WindowsFormsApp2
                 Buffer.BlockCopy(decompressedShorts, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
             }
         }
+
+
+
 
         private void ExecuteDmDecompressionToMemory()
         {
@@ -2818,6 +3048,24 @@ namespace WindowsFormsApp2
             btnCancelCompression.Enabled = false;
             lblProgressPercent.Text = "Cancelling...";
         }
+
+
+
+
+
+        private int GetDecompressedSampleRate()
+        {
+            if (_compressedMetadata != null) return _compressedMetadata.SampleRate;
+            if (_dmMetadata != null) return _dmMetadata.SampleRate;
+            if (_admMetadata != null) return _admMetadata.SampleRate;
+            if (_compandingMetadata != null) return _compandingMetadata.SampleRate;
+            // Adaptive Predictive — read from UI
+            if (cmbSampleRate?.SelectedItem != null &&
+                int.TryParse(cmbSampleRate.SelectedItem.ToString(), out int apRate))
+                return apRate;
+            return 16000;
+        }
+
 
 
     }
