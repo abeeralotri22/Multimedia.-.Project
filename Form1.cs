@@ -605,6 +605,75 @@ namespace WindowsFormsApp2
             DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", 1f);
         }
 
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_workingAudioCopyPath) || !File.Exists(_workingAudioCopyPath))
+            {
+                MessageBox.Show("Insert an audio first",
+                    "No Audio Loaded", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Stop anything currently playing so the reset starts from a clean audio state.
+            playbackTimer.Stop();
+            outputDevice?.Stop();
+            outputDevice?.Dispose();
+            outputDevice = null;
+            audioFile?.Dispose();
+            audioFile = null;
+            _decompressedStream?.Dispose();
+            _decompressedStream = null;
+
+            // The working copy is the untouched version of the uploaded audio, so make it active again.
+            audioPath = _workingAudioCopyPath;
+            _inputFilePath = _workingAudioCopyPath;
+            _copied_audio = null;
+            _decompressedPcmBytes = null;
+            _decompressedTotalBytes = 0;
+            _isDecompressed = false;
+            isPlaying = false;
+            PlayAudiobtn.Text = "Play Audio ▶︎";
+
+            // Clear algorithm metadata so decompression cannot reuse old compressed state after reset.
+            _compressedMetadata = null;
+            _dmMetadata = null;
+            _admMetadata = null;
+            _compandingMetadata = null;
+            _originalSamples = null;
+
+            DrawWaveform(audioPath);
+            ClearChartsForReset();
+            ResetSelectedAlgorithmParameters();
+
+            btnRunCompression.Enabled = true;
+            btnRunDecompression.Enabled = true;
+            PlayAudiobtn.Enabled = true;
+            btnCancelCompression.Enabled = false;
+        }
+
+        private void ClearChartsForReset()
+        {
+            // Empty both chart histories and redraw blank chart frames.
+            _chartTimer?.Stop();
+            _ratioHistory.Clear();
+            _speedHistory.Clear();
+            progressBar.Value = 0;
+            lblProgressPercent.Text = "Ready";
+            lblChartRatio.Text = "Compression Ratio:";
+            lblChartSpeed.Text = "Processing Speed:";
+            DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
+            DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", 1f);
+        }
+
+        private void ResetSelectedAlgorithmParameters()
+        {
+            // Re-rendering the selected algorithm panel restores every parameter control to its default value.
+            if (cmbAlgorithmType.SelectedItem != null)
+            {
+                cmbAlgorithmType_SelectedIndexChanged(cmbAlgorithmType, EventArgs.Empty);
+            }
+        }
+
         //private void btnOpenCompression_Click(object sender, EventArgs e)
         //{
         //    if (string.IsNullOrEmpty(this.audioPath))

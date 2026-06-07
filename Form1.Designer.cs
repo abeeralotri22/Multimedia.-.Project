@@ -157,6 +157,7 @@ namespace WindowsFormsApp2
         private void InitializeComponent()
         {
             this.PlayAudiobtn = new System.Windows.Forms.Button();
+            this.btnReset = new System.Windows.Forms.Button();
             this.DragDropLabel = new System.Windows.Forms.Label();
             this.waveformPictureBox = new System.Windows.Forms.PictureBox();
             this.InsertAudiobtn = new System.Windows.Forms.Button();
@@ -195,6 +196,17 @@ namespace WindowsFormsApp2
             this.PlayAudiobtn.Text = "Play Audio ▶︎ ";
             this.PlayAudiobtn.UseVisualStyleBackColor = true;
             this.PlayAudiobtn.Click += new System.EventHandler(this.PlayAudiobtn_Click);
+            // 
+            // btnReset
+            // 
+            this.btnReset.Location = new System.Drawing.Point(334, 450);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(195, 60);
+            this.btnReset.TabIndex = 18;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // DragDropLabel
             // 
@@ -456,6 +468,7 @@ namespace WindowsFormsApp2
             this.Controls.Add(this.waveformPictureBox);
             this.Controls.Add(this.DragDropLabel);
             this.Controls.Add(this.PlayAudiobtn);
+            this.Controls.Add(this.btnReset);
             this.Controls.Add(this.lblProgressPercent);
             this.Controls.Add(this.lblChartRatio);
             this.Controls.Add(this.lblChartSpeed);
@@ -477,6 +490,7 @@ namespace WindowsFormsApp2
         #endregion
 
         private System.Windows.Forms.Button PlayAudiobtn;
+        private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Label DragDropLabel;
         private System.Windows.Forms.PictureBox waveformPictureBox;
         private System.Windows.Forms.Button InsertAudiobtn;
