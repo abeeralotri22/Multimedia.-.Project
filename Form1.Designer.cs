@@ -239,7 +239,7 @@ namespace WindowsFormsApp2
             "batool ",
             "Delta Modulation",
             "Adaptive Delta Modulation",
-            "ghody"});
+            "Adaptive Predictive"});
             this.cmbAlgorithmType.Location = new System.Drawing.Point(910, 340);
             this.cmbAlgorithmType.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.cmbAlgorithmType.Name = "cmbAlgorithmType";

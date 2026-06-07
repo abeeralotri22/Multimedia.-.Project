@@ -152,6 +152,7 @@
     <Compile Include="AudioInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="CompressionEngine.cs" />
     <Compile Include="CompressionForm.cs">
       <SubType>Form</SubType>
     </Compile>

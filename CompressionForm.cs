@@ -8,6 +8,7 @@ namespace WindowsFormsApp2
 {
     public partial class CompressionForm : Form
     {
+        private CompressionEngine _myEngine = new CompressionEngine();
         private string _inputFilePath;
 
         // variable to hold the compressed sound wave in memory  
@@ -113,6 +114,8 @@ namespace WindowsFormsApp2
                     this.Cursor = Cursors.Default;
                 }
             }
+
+            
         }
 
 
@@ -211,11 +214,9 @@ namespace WindowsFormsApp2
                 btnRunDecompression.Enabled = false;
                 this.Cursor = Cursors.WaitCursor;
 
-                //  Calls the updated memory-exclusive decompressor 
                 ExecuteDpcmDecompressionToMemory();
 
 
-                // --- NEW: Calculate and format the decompressed size dynamically ---
                 long decompressedSize = _decompressedPcmBytes.Length;
                 string decompressedSizeFormatted = FormatBytes(decompressedSize);
 
@@ -233,6 +234,7 @@ namespace WindowsFormsApp2
                 btnRunDecompression.Enabled = true;
                 this.Cursor = Cursors.Default;
             }
+            
         }
 
 

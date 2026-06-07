@@ -10,7 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO;
 //using System.Reflection.Emit;
 using Emgu.CV; // (فقط هذا السطر الخاص بـ Emgu)
 
@@ -44,7 +43,15 @@ namespace WindowsFormsApp2
         private NumericUpDown numAdaptationFactor;
         private NumericUpDown numMaxStepSize;
         private NumericUpDown numHistoryBits;
+        private ComboBox cmbSampleRate;
+        //ghody
 
+        private NumericUpDown numLevels;
+        private NumericUpDown numStep;
+        private NumericUpDown numPredictionOrder;
+        private ComboBox cmbMode;
+        private CheckBox chkIsMono;
+        private ComboBox cmbSampleRate1; // وهذا أيضاً
         public class DpcmMetadata
         {
             public string OriginalExtension { get; set; }
@@ -504,7 +511,46 @@ namespace WindowsFormsApp2
     });
         }
 
+        private void RenderAdaptivePredictiveParameters()
+{
+    pnlParameters.Controls.Clear();
 
+    // 1. Levels
+    Label lblLevels = new Label { Text = "Levels:", Location = new Point(10, 15), AutoSize = true };
+    numLevels = new NumericUpDown { Location = new Point(160, 12), Width = 120, Minimum = 2, Maximum = 16, Value = 4 };
+
+    // 2. Step Size
+    Label lblStep = new Label { Text = "Step Size:", Location = new Point(10, 55), AutoSize = true };
+    numStep = new NumericUpDown { Location = new Point(160, 52), Width = 120, Minimum = 1, Maximum = 1000, Value = 50 };
+
+    // 3. Mode
+    Label lblMode = new Label { Text = "Mode:", Location = new Point(10, 95), AutoSize = true };
+    cmbMode = new ComboBox { Location = new Point(160, 92), Width = 120 };
+    cmbMode.Items.AddRange(new object[] { "Simple", "Linear", "Adaptive" });
+    cmbMode.SelectedIndex = 0;
+
+    // 4. Sample Rate (ComboBox)
+    Label lblRate = new Label { Text = "Target Sample Rate:", Location = new Point(10, 135), AutoSize = true };
+    cmbSampleRate = new ComboBox { Location = new Point(160, 132), Width = 120 };
+    cmbSampleRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
+    cmbSampleRate.SelectedIndex = 1;
+
+    // 5. Predictor Order (هنا التعديل: نستخدم المتغير العام numPredictionOrder)
+    Label lblOrder = new Label { Text = "Predictor Order:", Location = new Point(10, 175), AutoSize = true };
+    numPredictionOrder = new NumericUpDown { Location = new Point(160, 172), Width = 120, Minimum = 1, Maximum = 100, Value = 1 };
+
+    // 6. CheckBox
+    chkIsMono = new CheckBox { Text = "Use Mono", Location = new Point(10, 215), AutoSize = true, Checked = true };
+
+    pnlParameters.Controls.AddRange(new Control[] {
+        lblLevels, numLevels,
+        lblStep, numStep,
+        lblMode, cmbMode,
+        lblRate, cmbSampleRate,
+        lblOrder, numPredictionOrder, // أضفناها هنا
+        chkIsMono
+    });
+}
         private void cmbAlgorithmType_SelectedIndexChanged(object sender, EventArgs e)
         {
             pnlParameters.Controls.Clear();
@@ -521,6 +567,38 @@ namespace WindowsFormsApp2
             else if (selectedAlgorithm == "Adaptive Delta Modulation")
             {
                 RenderADMParameters();
+            }
+            else if (selectedAlgorithm == "Adaptive Predictive") 
+            {
+                RenderAdaptivePredictiveParameters();
+            }
+        }
+
+
+        // غيري void إلى CompressionResult
+        private CompressionResult ExecuteAdaptivePredictiveCompression(string inputPath, int targetSampleRate, int levels, CompressionEngine.PredictionMode mode, double stepSize, bool isMono, int predictorOrder)
+        {
+            using (var reader = new AudioFileReader(inputPath))
+            {
+                int channels = isMono ? 1 : reader.WaveFormat.Channels;
+                var resampler = new MediaFoundationResampler(reader, new WaveFormat(targetSampleRate, 16, channels));
+                var sampleProvider = resampler.ToSampleProvider();
+
+                int estimatedSamples = (int)(reader.TotalTime.TotalSeconds * targetSampleRate * channels);
+                float[] floatBuffer = new float[estimatedSamples + targetSampleRate];
+                int samplesRead = sampleProvider.Read(floatBuffer, 0, floatBuffer.Length);
+
+                short[] pcmSamples = new short[samplesRead];
+                for (int i = 0; i < samplesRead; i++)
+                {
+                    pcmSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, floatBuffer[i] * short.MaxValue));
+                }
+
+                CompressionEngine engine = new CompressionEngine();
+                var result = engine.Compress(pcmSamples, levels, mode, stepSize, channels, targetSampleRate, predictorOrder);
+
+                _copied_audio = result.CompressedData; // تحديث المصفوفة العامة
+                return result; // إرجاع النتيجة
             }
         }
 
@@ -648,6 +726,69 @@ namespace WindowsFormsApp2
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    btnRunCompression.Enabled = true;
+                    this.Cursor = Cursors.Default;
+                }
+                
+            }
+            else if (selectedAlgorithm == "Adaptive Predictive")
+            {
+                try
+                {
+                    // 1. التأكد من أن الأدوات ليست فارغة قبل القراءة
+                    if (cmbSampleRate.SelectedItem == null || numLevels == null || numPredictionOrder == null)
+                    {
+                        MessageBox.Show("خطأ: لم يتم تهيئة الأدوات بشكل صحيح.");
+                        return;
+                    }
+
+                    // 2. قراءة القيم
+                    int sampleRate = int.Parse(cmbSampleRate.SelectedItem.ToString());
+                    int levels = (int)numLevels.Value;
+                    double stepSize = (double)numStep.Value;
+                    // استبدلي سطر الـ mode في btnRunCompression_Click بهذا:
+                    string selectedModeText = cmbMode.SelectedItem.ToString();
+                    CompressionEngine.PredictionMode mode = (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), selectedModeText); bool isMono = chkIsMono.Checked;
+                    int predictorOrder = (int)numPredictionOrder.Value;
+
+                    btnRunCompression.Enabled = false;
+                    this.Cursor = Cursors.WaitCursor;
+
+                    // 3. تنفيذ الضغط
+                    var result = ExecuteAdaptivePredictiveCompression(_inputFilePath, sampleRate, levels, mode, stepSize, isMono, predictorOrder);
+
+                    // 4. معالجة البيانات والـ Header
+                    long compressedSize = 0;
+                    using (MemoryStream ms = new MemoryStream())
+                    using (BinaryWriter writer = new BinaryWriter(ms))
+                    {
+                        writer.Write(levels);
+                        writer.Write((int)mode);
+                        writer.Write(stepSize);
+                        writer.Write(sampleRate);
+                        writer.Write(result.CompressedData.Length);
+                        writer.Write(result.CompressedData);
+                        _copied_audio = ms.ToArray();
+                        compressedSize = ms.Length; // الحجم الكلي مع الـ Header
+                    }
+
+                    // 5. الحسابات
+                    long originalSize = new FileInfo(_inputFilePath).Length;
+                    long rawPcmSize = (long)result.TotalSamples * 2;
+                    double realRatio = (double)rawPcmSize / compressedSize;
+
+                    // 6. ظهور الرسالة المطلوبة
+                    MessageBox.Show($"حجم الصوت الخام (Raw PCM): {rawPcmSize} بايت\n" +
+                                    $"الحجم النهائي (مع الـ Header): {compressedSize} بايت\n" +
+                                    $"نسبة الضغط الفعلية: {realRatio:F2}x", "تحليل الضغط");
+                }
+                catch (Exception ex)
+                {
+                    // إذا حدث أي خطأ (مثل قسمة على صفر أو ملف تالف)، ستظهر هذه الرسالة وتخبركِ بالسبب
+                    MessageBox.Show($"حدث خطأ أثناء الضغط: \n{ex.Message}\n{ex.StackTrace}", "خطأ في الضغط");
                 }
                 finally
                 {
