@@ -20,7 +20,7 @@ namespace WindowsFormsApp2
     public class CompressionEngine
     {
 
-        public enum PredictionMode { Simple, Average, Linear }
+        public enum PredictionMode { Simple, Average, Linear , Adaptive }
 
         public CompressionResult Compress(short[] data, int quantizationLevels, PredictionMode mode, double stepSize, int channels, int sampleRate, int predictorOrder)
         {
@@ -43,48 +43,54 @@ namespace WindowsFormsApp2
                 }
             }
 
-            // مصفوفة تاريخ تبدأ من 0
             short[] history = new short[Math.Max(1, predictorOrder)];
+            for (int h = 0; h < history.Length; h++) history[h] = data[0];
 
             for (int i = 0; i < data.Length; i++)
             {
                 short predicted = 0;
 
-                // منطق التنبؤ المحدث لضمان استجابة المحرك
                 if (predictorOrder > 0)
                 {
-                    if (mode == PredictionMode.Linear)
+                    switch (mode)
                     {
-                        // Weighted Average: العينات الأحدث لها وزن أكبر (تجعل التنبؤ يتفاعل مع تغير الإشارة)
-                        double weightedSum = 0;
-                        int weightSum = 0;
-                        for (int k = 0; k < predictorOrder; k++)
-                        {
-                            int weight = (predictorOrder - k);
-                            weightedSum += history[k] * weight;
-                            weightSum += weight;
-                        }
-                        predicted = (short)(weightedSum / weightSum);
-                    }
-                    else if (mode == PredictionMode.Average && predictorOrder >= 2)
-                    {
-                        // متوسط بسيط لآخر عينتين فقط
-                        predicted = (short)((history[0] + history[1]) / 2);
-                    }
-                    else
-                    {
-                        // تنبؤ بسيط (قيمة العينة السابقة)
-                        predicted = history[0];
+                        case PredictionMode.Linear:
+                            if (history.Length >= 2)
+                            {
+                                predicted = (short)(2 * history[0] - history[1]);
+                            }
+                            else
+                            {
+                                predicted = history[0];
+                            }
+                            break;
+
+
+                        case PredictionMode.Adaptive:
+                            if (history.Length >= 2)
+                            {
+                                predicted = (short)(history[0] + (history[0] - history[1]) * 0.25);
+                            }
+                            else
+                            {
+                                predicted = history[0];
+                            }
+                            break;
                     }
                 }
 
                 double diff = (double)data[i] - predicted;
-                int val = (int)Math.Round((diff / stepSize) + (quantizationLevels / 2.0));
-                val = Math.Max(0, Math.Min(quantizationLevels - 1, val));
+                double modeSpecificStep = stepSize; double factor = 1.0; 
+                if (mode == PredictionMode.Linear) factor = 0.8;
+                if (mode == PredictionMode.Adaptive) factor = 1.0;
+                if (mode == PredictionMode.Average) factor = 1.5;
 
-                // threshold ديناميكي يعتمد على stepSize وعدد المستويات
-                int threshold = (int)(quantizationLevels * (stepSize / 200.0));
-                if (threshold < 1) threshold = 1;
+                double effectiveStep = stepSize * factor;
+                int val = (int)Math.Round((diff / effectiveStep) + (quantizationLevels / 2.0));
+                val = Math.Max(0, Math.Min(quantizationLevels - 1, val));
+                
+                int threshold = Math.Max(1, (int)(quantizationLevels * (0.1 + (predictorOrder * 0.02))));
+                //int threshold = Math.Max(1, (int)(quantizationLevels * 0.1));
                 bool isSmall = (val >= (quantizationLevels / 2 - threshold) && val <= (quantizationLevels / 2 + threshold));
 
                 if (isSmall)
@@ -99,7 +105,6 @@ namespace WindowsFormsApp2
                     bigCount++;
                 }
 
-                // تحديث التاريخ
                 for (int j = history.Length - 1; j > 0; j--)
                 {
                     history[j] = history[j - 1];
@@ -127,18 +132,15 @@ namespace WindowsFormsApp2
 
         public short[] Decompress(byte[] compressedData, int quantizationLevels, PredictionMode mode, double stepSize, int totalSamples, int predictorOrder)
         {
-            // 1. تعريف المتغيرات الأساسية
             int bitsPerSample = (int)Math.Ceiling(Math.Log(quantizationLevels, 2));
             if (bitsPerSample == 0) bitsPerSample = 1;
 
             short[] output = new short[totalSamples];
             short[] history = new short[Math.Max(1, predictorOrder)];
 
-            // هذه المتغيرات يجب أن تكون هنا لتعمل الـ Local Functions
             int bitIndex = 0;
             int byteIndex = 0;
 
-            // 2. الدوال المساعدة (Local Functions)
             int ReadBit()
             {
                 if (byteIndex >= compressedData.Length) return 0;
@@ -153,52 +155,59 @@ namespace WindowsFormsApp2
                 int value = 0;
                 for (int i = 0; i < count; i++)
                 {
-                    value |= (ReadBit() << i);
+                    if (ReadBit() == 1) value |= (1 << i);
                 }
-                return value; // الآن الدالة تعيد القيمة دائماً
+                return value;
             }
 
-            // 3. حلقة فك الضغط الرئيسية
+            int threshold = Math.Max(1, (int)(quantizationLevels * (0.1 + (predictorOrder * 0.02))));
+
             for (int i = 0; i < totalSamples; i++)
             {
                 short predicted = 0;
 
-                // حساب التنبؤ بناءً على النمط (Mode)
-                if (mode == PredictionMode.Linear && predictorOrder > 0)
+                if (predictorOrder > 0)
                 {
-                    double weightedSum = 0;
-                    int weightSum = 0;
-                    for (int k = 0; k < history.Length; k++)
+                    switch (mode)
                     {
-                        int weight = (history.Length - k);
-                        weightedSum += history[k] * weight;
-                        weightSum += weight;
+                        case PredictionMode.Linear:
+                            predicted = (history.Length >= 2) ? (short)(2 * history[0] - history[1]) : history[0];
+                            break;
+                        case PredictionMode.Adaptive:
+                            predicted = (history.Length >= 2) ? (short)(history[0] + (history[0] - history[1]) * 0.25) : history[0];
+                            break;
+                        case PredictionMode.Average:
+                            predicted = (history.Length >= 2) ? (short)((history[0] + history[1]) / 2) : history[0];
+                            break;
+                        default:
+                            predicted = history[0];
+                            break;
                     }
-                    predicted = (short)(weightedSum / weightSum);
                 }
-                else if (mode == PredictionMode.Average && history.Length >= 2)
+
+                int isBig = ReadBit();
+                int val;
+
+                if (isBig == 0)
                 {
-                    predicted = (short)((history[0] + history[1]) / 2);
+                    val = (quantizationLevels / 2);
                 }
                 else
                 {
-                    predicted = history[0];
+                    val = ReadBits(bitsPerSample);
                 }
 
-                // قراءة البتات
-                int isBig = ReadBit();
-                int val = (isBig == 0) ? (quantizationLevels / 2) : ReadBits(bitsPerSample);
+                double factor = (mode == PredictionMode.Linear) ? 0.8 : (mode == PredictionMode.Average ? 1.5 : 1.0);
+                double effectiveStep = stepSize * factor;
 
-                // إعادة بناء العينة
-                int diff = (int)Math.Round((val - (quantizationLevels / 2.0)) * stepSize);
+                int diff = (int)Math.Round((val - (quantizationLevels / 2.0)) * effectiveStep);
                 output[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, predicted + diff));
 
-                // تحديث التاريخ
                 for (int j = history.Length - 1; j > 0; j--) history[j] = history[j - 1];
                 history[0] = output[i];
             }
 
-            return output; // هذه هي الـ return الأساسية للدالة
+            return output;
         }
     }
 }
