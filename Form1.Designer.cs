@@ -179,6 +179,7 @@ namespace WindowsFormsApp2
             this.label3 = new System.Windows.Forms.Label();
             this.chartSpeed = new System.Windows.Forms.PictureBox();
             this.btnCancelCompression = new System.Windows.Forms.Button();
+            this.btnShowReport = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.waveformPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantBits)).BeginInit();
             this.pnlParameters.SuspendLayout();
@@ -188,7 +189,7 @@ namespace WindowsFormsApp2
             // 
             // PlayAudiobtn
             // 
-            this.PlayAudiobtn.Location = new System.Drawing.Point(223, 244);
+            this.PlayAudiobtn.Location = new System.Drawing.Point(775, 16);
             this.PlayAudiobtn.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.PlayAudiobtn.Name = "PlayAudiobtn";
             this.PlayAudiobtn.Size = new System.Drawing.Size(130, 39);
@@ -199,10 +200,10 @@ namespace WindowsFormsApp2
             // 
             // btnReset
             // 
-            this.btnReset.Location = new System.Drawing.Point(334, 450);
-            this.btnReset.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnReset.Location = new System.Drawing.Point(641, 16);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(2, 1, 2, 1);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(195, 60);
+            this.btnReset.Size = new System.Drawing.Size(130, 39);
             this.btnReset.TabIndex = 18;
             this.btnReset.Text = "Reset";
             this.btnReset.UseVisualStyleBackColor = true;
@@ -215,7 +216,7 @@ namespace WindowsFormsApp2
             this.DragDropLabel.Location = new System.Drawing.Point(19, 16);
             this.DragDropLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.DragDropLabel.Name = "DragDropLabel";
-            this.DragDropLabel.Padding = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.DragDropLabel.Padding = new System.Windows.Forms.Padding(8);
             this.DragDropLabel.Size = new System.Drawing.Size(334, 60);
             this.DragDropLabel.TabIndex = 1;
             this.DragDropLabel.Text = "Drag and drop here";
@@ -228,14 +229,14 @@ namespace WindowsFormsApp2
             this.waveformPictureBox.Location = new System.Drawing.Point(21, 84);
             this.waveformPictureBox.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
             this.waveformPictureBox.Name = "waveformPictureBox";
-            this.waveformPictureBox.Size = new System.Drawing.Size(1110, 153);
+            this.waveformPictureBox.Size = new System.Drawing.Size(1043, 153);
             this.waveformPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.waveformPictureBox.TabIndex = 3;
             this.waveformPictureBox.TabStop = false;
             // 
             // InsertAudiobtn
             // 
-            this.InsertAudiobtn.Location = new System.Drawing.Point(394, 16);
+            this.InsertAudiobtn.Location = new System.Drawing.Point(371, 16);
             this.InsertAudiobtn.Margin = new System.Windows.Forms.Padding(3, 1, 3, 1);
             this.InsertAudiobtn.Name = "InsertAudiobtn";
             this.InsertAudiobtn.Size = new System.Drawing.Size(130, 39);
@@ -308,12 +309,19 @@ namespace WindowsFormsApp2
             // cmbSamplingRate
             // 
             this.cmbSamplingRate.FormattingEnabled = true;
+            this.cmbSamplingRate.Items.AddRange(new object[] {
+            "44100",
+            "22050",
+            "16000",
+            "11025",
+            "8000",
+            "",
+            ""});
             this.cmbSamplingRate.Location = new System.Drawing.Point(54, 12);
             this.cmbSamplingRate.Name = "cmbSamplingRate";
             this.cmbSamplingRate.Size = new System.Drawing.Size(121, 21);
             this.cmbSamplingRate.TabIndex = 0;
             this.cmbSamplingRate.Text = "Sampling Rate";
-            this.cmbSamplingRate.SelectedIndexChanged += new System.EventHandler(this.cmbSamplingRate_SelectedIndexChanged);
             // 
             // pnlParameters
             // 
@@ -349,7 +357,7 @@ namespace WindowsFormsApp2
             // 
             // lblProgressPercent
             // 
-            this.lblProgressPercent.Location = new System.Drawing.Point(931, 590);
+            this.lblProgressPercent.Location = new System.Drawing.Point(652, 452);
             this.lblProgressPercent.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblProgressPercent.Name = "lblProgressPercent";
             this.lblProgressPercent.Size = new System.Drawing.Size(283, 16);
@@ -377,8 +385,8 @@ namespace WindowsFormsApp2
             // 
             // progressBar
             // 
-            this.progressBar.Location = new System.Drawing.Point(934, 619);
-            this.progressBar.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.progressBar.Location = new System.Drawing.Point(652, 470);
+            this.progressBar.Margin = new System.Windows.Forms.Padding(2);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(283, 20);
             this.progressBar.TabIndex = 11;
@@ -404,7 +412,7 @@ namespace WindowsFormsApp2
             this.chartCompressRatio.BackColor = System.Drawing.Color.White;
             this.chartCompressRatio.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.chartCompressRatio.Location = new System.Drawing.Point(453, 578);
-            this.chartCompressRatio.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chartCompressRatio.Margin = new System.Windows.Forms.Padding(2);
             this.chartCompressRatio.Name = "chartCompressRatio";
             this.chartCompressRatio.Size = new System.Drawing.Size(376, 248);
             this.chartCompressRatio.TabIndex = 14;
@@ -423,7 +431,7 @@ namespace WindowsFormsApp2
             this.chartSpeed.BackColor = System.Drawing.Color.White;
             this.chartSpeed.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.chartSpeed.Location = new System.Drawing.Point(21, 578);
-            this.chartSpeed.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.chartSpeed.Margin = new System.Windows.Forms.Padding(2);
             this.chartSpeed.Name = "chartSpeed";
             this.chartSpeed.Size = new System.Drawing.Size(377, 248);
             this.chartSpeed.TabIndex = 16;
@@ -435,19 +443,30 @@ namespace WindowsFormsApp2
             this.btnCancelCompression.Enabled = false;
             this.btnCancelCompression.ForeColor = System.Drawing.Color.White;
             this.btnCancelCompression.Location = new System.Drawing.Point(596, 351);
-            this.btnCancelCompression.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnCancelCompression.Margin = new System.Windows.Forms.Padding(2);
             this.btnCancelCompression.Name = "btnCancelCompression";
             this.btnCancelCompression.Size = new System.Drawing.Size(156, 23);
             this.btnCancelCompression.TabIndex = 17;
             this.btnCancelCompression.Text = "Cancel";
             this.btnCancelCompression.UseVisualStyleBackColor = false;
-            this.btnCancelCompression.Click += new System.EventHandler(this.btnCancelCompression_Click);
+            this.btnCancelCompression.Click += new System.EventHandler(this.btnShowReport_Click);
+            // 
+            // btnShowReport
+            // 
+            this.btnShowReport.Location = new System.Drawing.Point(507, 16);
+            this.btnShowReport.Name = "btnShowReport";
+            this.btnShowReport.Size = new System.Drawing.Size(129, 39);
+            this.btnShowReport.TabIndex = 19;
+            this.btnShowReport.Text = "Show Report";
+            this.btnShowReport.UseVisualStyleBackColor = true;
+            this.btnShowReport.Click += new System.EventHandler(this.btnShowReport_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1011, 604);
+            this.ClientSize = new System.Drawing.Size(1448, 722);
+            this.Controls.Add(this.btnShowReport);
             this.Controls.Add(this.btnCancelCompression);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.label1);
@@ -508,5 +527,6 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.PictureBox chartSpeed;
         private System.Windows.Forms.Button btnCancelCompression;
+        private System.Windows.Forms.Button btnShowReport;
     }
 }
