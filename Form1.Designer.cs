@@ -236,7 +236,8 @@ namespace WindowsFormsApp2
             this.cmbAlgorithmType.FormattingEnabled = true;
             this.cmbAlgorithmType.Items.AddRange(new object[] {
             "DPCM",
-            "batool ",
+            "Mu-Law",
+            "A-Law",
             "Delta Modulation",
             "Adaptive Delta Modulation",
             "Adaptive Predictive"});

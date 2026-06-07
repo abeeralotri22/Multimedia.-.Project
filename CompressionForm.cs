@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -17,6 +18,11 @@ namespace WindowsFormsApp2
 
         // variable to hold the decompressed sound wave in memory 
         private byte[] _decompressedPcmBytes = null;
+        private ComboBox cmbChannels;
+
+        //Mu and A for Batouls' Algorithms
+        private const double Mu = 255.0;
+        private const double A = 87.6;
 
         public class DpcmMetadata
         {
@@ -57,6 +63,38 @@ namespace WindowsFormsApp2
             pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblPredictor, cmbPredictorType });
         }
 
+        private void RenderMuLawParameters()
+        {
+            Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
+
+            cmbSamplingRate = new ComboBox { Location = new Point(150, 12), Width = 160, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
+            cmbSamplingRate.SelectedIndex = 0;
+            Label lblBits = new Label { Text = "Bit Depth:", Location = new Point(10, 55), AutoSize = true };
+            numQuantBits = new NumericUpDown { Location = new Point(150, 52), Width = 160, Minimum = 2, Maximum = 16, Value = 8 };
+            Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
+            cmbChannels = new ComboBox { Location = new Point(150, 92), Width = 160, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
+            cmbChannels.SelectedIndex = 0;
+            pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblChannels, cmbChannels });
+        }
+
+        private void RenderALawParameters()
+        {
+            Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
+
+            cmbSamplingRate = new ComboBox { Location = new Point(150, 12), Width = 160, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
+            cmbSamplingRate.SelectedIndex = 0;
+            Label lblBits = new Label { Text = "Bit Depth:", Location = new Point(10, 55), AutoSize = true };
+            numQuantBits = new NumericUpDown { Location = new Point(150, 52), Width = 160, Minimum = 2, Maximum = 16, Value = 8 };
+            Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
+            cmbChannels = new ComboBox { Location = new Point(150, 92), Width = 160, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
+            cmbChannels.SelectedIndex = 0;
+            pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblChannels, cmbChannels });
+        }
+
         private void cmbAlgorithmType_SelectedIndexChanged(object sender, EventArgs e)
         {
             pnlParameters.Controls.Clear();
@@ -65,6 +103,14 @@ namespace WindowsFormsApp2
             if (selectedAlgorithm == "DPCM")
             {
                 RenderDpcmParameters();
+            }
+            else if (selectedAlgorithm == "Mu-Law")
+            {
+                RenderMuLawParameters();
+            }
+            else if (selectedAlgorithm == "A-Law")
+            {
+                RenderALawParameters();
             }
         }
 
@@ -305,5 +351,14 @@ namespace WindowsFormsApp2
             waveOut.Play();
         }
         */
+
+
+
+
+
+
+
+
+
     }
 }

@@ -26,13 +26,17 @@ namespace WindowsFormsApp2
         private Timer playbackTimer;
         private Bitmap waveformBitmap;
         private bool isPlaying = false;
+        private const double MuLawMu = 255.0;
+        private const double ALawA = 87.6;
 
         // ALGORITHMS
         private string _inputFilePath;
+        private string _workingAudioCopyPath;
         private byte[] _copied_audio = null;
         private DpcmMetadata _compressedMetadata = null;
         private DmMetadata _dmMetadata = null;
         private AdmMetadata _admMetadata = null;
+        private CompandingMetadata _compandingMetadata = null;
         private byte[] _decompressedPcmBytes = null;
 
         private short[] _originalSamples = null;
@@ -44,6 +48,7 @@ namespace WindowsFormsApp2
         private NumericUpDown numMaxStepSize;
         private NumericUpDown numHistoryBits;
         private ComboBox cmbSampleRate;
+        private ComboBox cmbChannels;
         //ghody
 
         private NumericUpDown numLevels;
@@ -86,9 +91,20 @@ namespace WindowsFormsApp2
             public int HistoryBits { get; set; }
             public int LpfCutoff { get; set; }
         }
+
+        public class CompandingMetadata
+        {
+            public string Algorithm { get; set; }
+            public string OriginalExtension { get; set; }
+            public int SampleRate { get; set; }
+            public byte BitDepth { get; set; }
+            public int Channels { get; set; }
+            public int TotalSamples { get; set; }
+        }
         public Form1()
         {
             InitializeComponent();
+            ConfigureAlgorithmDropdown();
             try
             {
                 var mat = new Emgu.CV.Mat();
@@ -110,6 +126,21 @@ namespace WindowsFormsApp2
 
             if (cmbAlgorithmType.Items.Count > 0)
                 cmbAlgorithmType.SelectedIndex = 0;
+        }
+
+        private void ConfigureAlgorithmDropdown()
+        {
+            // Rebuild the dropdown in code so Visual Studio designer cache cannot keep the old "batool" item alive.
+            cmbAlgorithmType.Items.Clear();
+            cmbAlgorithmType.Items.AddRange(new object[]
+            {
+                "DPCM",
+                "Mu-Law",
+                "A-Law",
+                "Delta Modulation",
+                "Adaptive Delta Modulation",
+                "Adaptive Predictive"
+            });
         }
 
 
@@ -313,6 +344,23 @@ namespace WindowsFormsApp2
             }
         }
 
+        private string CopyUploadedAudioToWorkingFile(string filePath)
+        {
+            string copyFolder = Path.Combine(Application.StartupPath, "audio_working_copies");
+            Directory.CreateDirectory(copyFolder);
+
+            string copyName =
+                Path.GetFileNameWithoutExtension(filePath) +
+                "_" +
+                Guid.NewGuid().ToString("N") +
+                Path.GetExtension(filePath);
+
+            string copyPath = Path.Combine(copyFolder, copyName);
+            // Every algorithm reads this copied file so the uploaded original stays untouched.
+            File.Copy(filePath, copyPath);
+            return copyPath;
+        }
+
         private void LoadAudio(string filePath)
         {
             if (outputDevice != null)
@@ -333,15 +381,22 @@ namespace WindowsFormsApp2
             isPlaying = false;
             PlayAudiobtn.Text = "Play Audio ▶︎";
 
-            audioPath = filePath;
-            _inputFilePath = filePath;
+            _workingAudioCopyPath = CopyUploadedAudioToWorkingFile(filePath);
+            audioPath = _workingAudioCopyPath;
+            _inputFilePath = _workingAudioCopyPath;
+            _copied_audio = null;
+            _decompressedPcmBytes = null;
+            _compressedMetadata = null;
+            _dmMetadata = null;
+            _admMetadata = null;
+            _compandingMetadata = null;
 
-            FileInfo fileInfo = new FileInfo(audioPath);
+            FileInfo fileInfo = new FileInfo(filePath);
 
             using (AudioFileReader reader = new AudioFileReader(audioPath))
             {
                 audioInfo =
-                    $"File Name: {Path.GetFileName(audioPath)}\n\n" +
+                    $"File Name: {Path.GetFileName(filePath)}\n\n" +
                     $"File Size: {(fileInfo.Length / 1024.0 / 1024.0):F2} MB\n\n" +
                     $"Duration: {reader.TotalTime:mm\\:ss}\n\n" +
                     $"Sample Rate: {reader.WaveFormat.SampleRate} Hz\n\n" +
@@ -351,7 +406,7 @@ namespace WindowsFormsApp2
                 InfoLabel.Text = audioInfo;
             }
 
-            DragDropLabel.Text = Path.GetFileName(audioPath);
+            DragDropLabel.Text = Path.GetFileName(filePath);
 
             DrawWaveform(audioPath);
 
@@ -399,6 +454,50 @@ namespace WindowsFormsApp2
             cmbPredictorType.SelectedIndex = 0;
 
             pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblPredictor, cmbPredictorType });
+        }
+
+        private void RenderMuLawParameters()
+        {
+            Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
+
+            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
+            // Mu-Law uses 8000 Hz as the requested default sample rate.
+            cmbSamplingRate.SelectedIndex = 0;
+
+            Label lblBits = new Label { Text = "Bit Depth:", Location = new Point(10, 55), AutoSize = true };
+            // NumericUpDown keeps the bit depth constrained to the requested 2-16 range.
+            numQuantBits = new NumericUpDown { Location = new Point(160, 52), Width = 140, Minimum = 2, Maximum = 16, Value = 8 };
+
+            Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
+            cmbChannels = new ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
+            // Mono is selected first so the panel opens with the requested default.
+            cmbChannels.SelectedIndex = 0;
+
+            pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblChannels, cmbChannels });
+        }
+
+        private void RenderALawParameters()
+        {
+            Label lblRate = new Label { Text = "Sample Rate:", Location = new Point(10, 15), AutoSize = true };
+
+            cmbSamplingRate = new ComboBox { Location = new Point(160, 12), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSamplingRate.Items.AddRange(new object[] { "8000", "16000", "22050", "44100" });
+            // A-Law uses the same sample-rate options and 8000 Hz default as Mu-Law.
+            cmbSamplingRate.SelectedIndex = 0;
+
+            Label lblBits = new Label { Text = "Bit Depth:", Location = new Point(10, 55), AutoSize = true };
+            // The requested default bit depth is 8, with valid values from 2 through 16.
+            numQuantBits = new NumericUpDown { Location = new Point(160, 52), Width = 140, Minimum = 2, Maximum = 16, Value = 8 };
+
+            Label lblChannels = new Label { Text = "Channels:", Location = new Point(10, 95), AutoSize = true };
+            cmbChannels = new ComboBox { Location = new Point(160, 92), Width = 140, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbChannels.Items.AddRange(new object[] { "Mono (1 Channel)", "Same as Original" });
+            // The first item is the requested Mono default.
+            cmbChannels.SelectedIndex = 0;
+
+            pnlParameters.Controls.AddRange(new Control[] { lblRate, cmbSamplingRate, lblBits, numQuantBits, lblChannels, cmbChannels });
         }
 
         private void RenderDMParameters()
@@ -560,6 +659,14 @@ namespace WindowsFormsApp2
             {
                 RenderDpcmParameters();
             }
+            else if (selectedAlgorithm == "Mu-Law")
+            {
+                RenderMuLawParameters();
+            }
+            else if (selectedAlgorithm == "A-Law")
+            {
+                RenderALawParameters();
+            }
             else if (selectedAlgorithm == "Delta Modulation")
             {
                 RenderDMParameters();
@@ -634,6 +741,46 @@ namespace WindowsFormsApp2
                     MessageBox.Show($"Compressed to Memory!\n\n" +
                                     $"Original Size: {originalSizeFormatted}\n" +
                                     $"In-Memory Size: {compressedSizeFormatted}\n" +
+                                    $"Compression Ratio: {ratio:F2}x",
+                                    "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Compression failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    btnRunCompression.Enabled = true;
+                    this.Cursor = Cursors.Default;
+                }
+            }
+            else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+            {
+                string samplingRateText = cmbSamplingRate.SelectedItem != null ? cmbSamplingRate.SelectedItem.ToString() : cmbSamplingRate.Text;
+                if (!int.TryParse(samplingRateText, out int targetSamplingRate))
+                {
+                    targetSamplingRate = 8000;
+                }
+
+                int bitDepth = (int)numQuantBits.Value;
+                bool useMono = cmbChannels == null || cmbChannels.SelectedIndex == 0;
+
+                try
+                {
+                    btnRunCompression.Enabled = false;
+                    this.Cursor = Cursors.WaitCursor;
+
+                    ExecuteCompandingCompressionToMemory(_inputFilePath, selectedAlgorithm, targetSamplingRate, bitDepth, useMono);
+
+                    long originalSize = new FileInfo(_inputFilePath).Length;
+                    long compressedSize = _copied_audio.Length;
+                    double ratio = (double)originalSize / compressedSize;
+
+                    MessageBox.Show($"Compressed to Memory using {selectedAlgorithm}!\n\n" +
+                                    $"Returned File: {Path.GetFileNameWithoutExtension(_inputFilePath)}_{selectedAlgorithm.Replace("-", "").ToLower()}_compressed.wav\n" +
+                                    $"Returned Extension: .wav\n" +
+                                    $"Original Size: {FormatBytes(originalSize)}\n" +
+                                    $"Returned Size: {FormatBytes(compressedSize)}\n" +
                                     $"Compression Ratio: {ratio:F2}x",
                                     "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -812,6 +959,257 @@ namespace WindowsFormsApp2
             {
                 return $"{kb:F2} KB";
             }
+        }
+
+        private void ExecuteCompandingCompressionToMemory(string inputPath, string algorithm, int targetSampleRate, int bitDepth, bool useMono)
+        {
+            using (var reader = new AudioFileReader(inputPath))
+            using (var resampler = new MediaFoundationResampler(
+                reader,
+                new WaveFormat(targetSampleRate, 16, useMono ? 1 : reader.WaveFormat.Channels)))
+            {
+                var sampleProvider = resampler.ToSampleProvider();
+                float[] samples = ReadAllSamples(sampleProvider);
+
+                if (samples.Length == 0)
+                {
+                    throw new InvalidOperationException("No audio samples were read from the copied file.");
+                }
+
+                _originalSamples = new short[samples.Length];
+                byte[] compressedBytes = new byte[samples.Length];
+
+                for (int i = 0; i < samples.Length; i++)
+                {
+                    _originalSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, samples[i] * short.MaxValue));
+
+                    double companded =
+                        algorithm == "A-Law"
+                            ? ApplyALaw(samples[i])
+                            : ApplyMuLaw(samples[i]);
+
+                    // The uploaded logic returns one 8-bit WAV byte for each quantized companded sample.
+                    compressedBytes[i] = QuantizeToByte(companded, bitDepth);
+                }
+
+                _copied_audio = CreateCompressedWaveBytes(
+                    compressedBytes,
+                    sampleProvider.WaveFormat.SampleRate,
+                    sampleProvider.WaveFormat.Channels);
+
+                _compandingMetadata = new CompandingMetadata
+                {
+                    Algorithm = algorithm,
+                    OriginalExtension = Path.GetExtension(inputPath),
+                    SampleRate = sampleProvider.WaveFormat.SampleRate,
+                    BitDepth = (byte)bitDepth,
+                    Channels = sampleProvider.WaveFormat.Channels,
+                    TotalSamples = samples.Length
+                };
+            }
+        }
+
+        private byte[] ExecuteCompandingDecompressionToMemory()
+        {
+            if (_compandingMetadata == null)
+            {
+                throw new InvalidOperationException("No Mu-Law or A-Law metadata found. Run compression first.");
+            }
+
+            using (var reader = new WaveFileReader(new MemoryStream(_copied_audio)))
+            {
+                if (reader.WaveFormat.BitsPerSample != 8)
+                {
+                    throw new InvalidOperationException("Please choose an 8-bit compressed WAV file to decompress.");
+                }
+
+                byte[] compressedBytes = ReadAllBytes(reader);
+
+                if (compressedBytes.Length == 0)
+                {
+                    throw new InvalidOperationException("No compressed audio samples were read from the compressed copy.");
+                }
+
+                float[] expandedSamples = new float[compressedBytes.Length];
+                short[] decompressedShorts = new short[compressedBytes.Length];
+
+                for (int i = 0; i < compressedBytes.Length; i++)
+                {
+                    double companded = DequantizeByte(compressedBytes[i]);
+                    double expanded =
+                        _compandingMetadata.Algorithm == "A-Law"
+                            ? InverseALaw(companded)
+                            : InverseMuLaw(companded);
+
+                    expandedSamples[i] = (float)Clamp(expanded, -1.0, 1.0);
+                    decompressedShorts[i] = (short)(expandedSamples[i] * short.MaxValue);
+                }
+
+                _decompressedPcmBytes = new byte[decompressedShorts.Length * 2];
+                Buffer.BlockCopy(decompressedShorts, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+
+                return CreateDecompressedWaveBytes(
+                    expandedSamples,
+                    reader.WaveFormat.SampleRate,
+                    reader.WaveFormat.Channels);
+            }
+        }
+
+        private double ApplyMuLaw(double x)
+        {
+            double magnitude = Math.Abs(x);
+
+            return Math.Sign(x) *
+                   Math.Log(1.0 + MuLawMu * magnitude) /
+                   Math.Log(1.0 + MuLawMu);
+        }
+
+        private double InverseMuLaw(double y)
+        {
+            double magnitude = Math.Abs(y);
+
+            return Math.Sign(y) *
+                   (Math.Pow(1.0 + MuLawMu, magnitude) - 1.0) /
+                   MuLawMu;
+        }
+
+        private double ApplyALaw(double x)
+        {
+            double magnitude = Math.Abs(x);
+            double denominator = 1.0 + Math.Log(ALawA);
+            double companded;
+
+            if (magnitude < 1.0 / ALawA)
+            {
+                companded = (ALawA * magnitude) / denominator;
+            }
+            else
+            {
+                companded = (1.0 + Math.Log(ALawA * magnitude)) / denominator;
+            }
+
+            return Math.Sign(x) * companded;
+        }
+
+        private double InverseALaw(double y)
+        {
+            double magnitude = Math.Abs(y);
+            double denominator = 1.0 + Math.Log(ALawA);
+            double boundary = 1.0 / denominator;
+            double expanded;
+
+            if (magnitude < boundary)
+            {
+                expanded = (magnitude * denominator) / ALawA;
+            }
+            else
+            {
+                expanded = Math.Exp(magnitude * denominator - 1.0) / ALawA;
+            }
+
+            return Math.Sign(y) * expanded;
+        }
+
+        private byte QuantizeToByte(double sample, int bitDepth)
+        {
+            int usableBits = Math.Max(2, Math.Min(8, bitDepth));
+            int levels = 1 << usableBits;
+            double normalized = (Clamp(sample, -1.0, 1.0) + 1.0) / 2.0;
+            int index = (int)Math.Round(normalized * (levels - 1));
+            double quantized = index / (double)(levels - 1);
+
+            return (byte)Math.Round(quantized * 255);
+        }
+
+        private double DequantizeByte(byte sample)
+        {
+            return (sample / 255.0) * 2.0 - 1.0;
+        }
+
+        private float[] ReadAllSamples(ISampleProvider provider)
+        {
+            List<float> samples = new List<float>();
+            float[] buffer = new float[provider.WaveFormat.SampleRate * provider.WaveFormat.Channels];
+            int read;
+
+            while ((read = provider.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                for (int i = 0; i < read; i++)
+                {
+                    samples.Add(buffer[i]);
+                }
+            }
+
+            return samples.ToArray();
+        }
+
+        private byte[] ReadAllBytes(WaveStream reader)
+        {
+            List<byte> bytes = new List<byte>();
+            byte[] buffer = new byte[Math.Max(1, reader.WaveFormat.AverageBytesPerSecond)];
+            int read;
+
+            while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                for (int i = 0; i < read; i++)
+                {
+                    bytes.Add(buffer[i]);
+                }
+            }
+
+            return bytes.ToArray();
+        }
+
+        private byte[] CreateCompressedWaveBytes(byte[] compressedBytes, int sampleRate, int channels)
+        {
+            WaveFormat format = new WaveFormat(sampleRate, 8, channels);
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (WaveFileWriter writer = new WaveFileWriter(stream, format))
+                {
+                    // Compression returns a WAV file copy in memory instead of writing over the uploaded file.
+                    writer.Write(compressedBytes, 0, compressedBytes.Length);
+                }
+
+                return stream.ToArray();
+            }
+        }
+
+        private byte[] CreateDecompressedWaveBytes(float[] samples, int sampleRate, int channels)
+        {
+            byte[] buffer = new byte[samples.Length * 2];
+
+            for (int i = 0; i < samples.Length; i++)
+            {
+                short value = (short)(Clamp(samples[i], -1.0, 1.0) * short.MaxValue);
+                byte[] bytes = BitConverter.GetBytes(value);
+
+                buffer[i * 2] = bytes[0];
+                buffer[i * 2 + 1] = bytes[1];
+            }
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (WaveFileWriter writer = new WaveFileWriter(stream, new WaveFormat(sampleRate, 16, channels)))
+                {
+                    // Decompression returns a playable 16-bit WAV copy in memory.
+                    writer.Write(buffer, 0, buffer.Length);
+                }
+
+                return stream.ToArray();
+            }
+        }
+
+        private double Clamp(double value, double minimum, double maximum)
+        {
+            if (value < minimum)
+                return minimum;
+
+            if (value > maximum)
+                return maximum;
+
+            return value;
         }
 
         private void ExecuteDpcmCompressionToMemory(string inputPath, int targetSampleRate, int bits, int predictorType)
@@ -1085,6 +1483,24 @@ namespace WindowsFormsApp2
                 if (selectedAlgorithm == "DPCM")
                 {
                     ExecuteDpcmDecompressionToMemory();
+                }
+                else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
+                {
+                    byte[] returnedFile = ExecuteCompandingDecompressionToMemory();
+                    double compandingMse = CalculateMSE();
+
+                    MessageBox.Show(
+                        $"Audio decompressed completely using {selectedAlgorithm}!\n\n" +
+                        $"Returned File: {_compandingMetadata.Algorithm.Replace("-", "").ToLower()}_decompressed.wav\n" +
+                        $"Returned Extension: .wav\n" +
+                        $"Returned Size: {FormatBytes(returnedFile.Length)}\n" +
+                        $"MSE: {compandingMse:F2}\n\n" +
+                        $"Status: Ready for playing or processing.",
+                        "Success",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    return;
                 }
                 else if (selectedAlgorithm == "Delta Modulation")
                 {
