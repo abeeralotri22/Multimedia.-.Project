@@ -751,10 +751,14 @@ namespace WindowsFormsApp2
                     pcmSamples[i] = (short)Math.Max(short.MinValue, Math.Min(short.MaxValue, floatBuffer[i] * short.MaxValue));
                 }
 
+                // --- التعديل هنا: تخزين النسخة الأصلية للذاكرة ---
+                _originalSamples = pcmSamples;
+                // ----------------------------------------------
+
                 CompressionEngine engine = new CompressionEngine();
                 var result = engine.Compress(pcmSamples, levels, mode, stepSize, channels, targetSampleRate, predictorOrder);
 
-                _copied_audio = result.CompressedData; // تحديث المصفوفة العامة
+                _copied_audio = result.CompressedData; // تحديث المصفوفة العامة للبيانات المضغوطة
                 return result; // إرجاع النتيجة
             }
         }
@@ -2312,7 +2316,35 @@ namespace WindowsFormsApp2
                 {
                     ExecuteAdmDecompressionToMemory();
                 }
-                
+
+                else if (selectedAlgorithm == "Adaptive Predictive")
+                {
+                    if (_originalSamples == null)
+                    {
+                        MessageBox.Show("Original audio sampling weren't stored during compressed",
+                                        "Data Missing",
+                                        MessageBoxButtons.OK,
+                                        MessageBoxIcon.Warning);
+
+                        btnRunDecompression.Enabled = true;
+                        this.Cursor = Cursors.Default;
+                        return;
+                    }
+
+                    CompressionEngine engine = new CompressionEngine();
+
+                    short[] pcmResult = engine.Decompress(
+                        _copied_audio,
+                        (int)numLevels.Value,
+                        (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), cmbMode.Text),
+                        (double)numStep.Value,
+                        _originalSamples.Length,
+                        (int)numPredictionOrder.Value
+                    );
+
+                    _decompressedPcmBytes = new byte[pcmResult.Length * 2];
+                    Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+                }
 
                 long decompressedSize = _decompressedPcmBytes.Length;
                 string decompressedSizeFormatted = FormatBytes(decompressedSize);
@@ -2648,13 +2680,11 @@ namespace WindowsFormsApp2
                     // border
                     g.DrawRectangle(borderPen, paddingLeft, paddingTop, chartW, chartH);
 
-                    // Y axis — 5 grid lines + ticks + labels
                     for (int i = 0; i <= 5; i++)
                     {
                         float val = maxValue * i / 5f;
                         int y = paddingTop + chartH - (int)(chartH * i / 5f);
 
-                        // grid line
                         g.DrawLine(gridPen, paddingLeft + 1, y, paddingLeft + chartW - 1, y);
 
                         // ticks على اليسار
