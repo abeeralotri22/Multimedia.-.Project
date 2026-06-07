@@ -25,6 +25,7 @@ namespace WindowsFormsApp2
 
         private string audioPath = "";
         private string audioInfo = "";
+        private string _originalFilePath = "";
         private WaveOutEvent outputDevice;
         private AudioFileReader audioFile;
         private System.Windows.Forms.Timer playbackTimer;
@@ -554,6 +555,7 @@ namespace WindowsFormsApp2
 
         private void LoadAudio(string filePath)
         {
+            _originalFilePath = filePath;
             if (outputDevice != null)
             {
                 outputDevice.Stop();
@@ -3315,5 +3317,383 @@ namespace WindowsFormsApp2
             pnlReportSidebar.Visible = false;
         }
 
+        // SAVE MIGHT NOT WORK ON BATOULS'
+        //private void btnSave_Click(object sender, EventArgs e)
+        //{
+        //    if (string.IsNullOrEmpty(_originalFilePath))
+        //    {
+        //        MessageBox.Show("No file loaded.", "Nothing to Save",
+        //            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //        return;
+        //    }
+
+        //    if (_isDecompressed && _decompressedPcmBytes != null)
+        //    {
+        //        SaveDecompressed();
+        //    }
+        //    else if (_copied_audio != null)
+        //    {
+        //        SaveCompressed();
+        //    }
+        //    else
+        //    {
+        //        // Original file — just copy it to wherever user wants
+        //        string ext = GetOriginalExtension();
+        //        string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+
+        //        SaveFileDialog dlg = new SaveFileDialog
+        //        {
+        //            Title = "Save Audio",
+        //            Filter = filter,
+        //            FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + ext
+        //        };
+
+        //        if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //        try
+        //        {
+        //            File.Copy(_originalFilePath, dlg.FileName, overwrite: true);
+        //            MessageBox.Show($"Saved to:\n{dlg.FileName}",
+        //                "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show("Save failed: " + ex.Message, "Error",
+        //                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //    }
+        //}
+
+        //private string GetOriginalExtension()
+        //{
+        //    return Path.GetExtension(_inputFilePath).ToLower();
+        //}
+
+        //private string GetAlgoSuffix()
+        //{
+        //    switch (cmbAlgorithmType.SelectedItem?.ToString())
+        //    {
+        //        case "DPCM": return "dpcm";
+        //        case "Mu-Law": return "mulaw";
+        //        case "A-Law": return "alaw";
+        //        case "Delta Modulation": return "dm";
+        //        case "Adaptive Delta Modulation": return "adm";
+        //        case "Adaptive Predictive": return "ap";
+        //        default: return "compressed";
+        //    }
+        //}
+
+        //private void SaveDecompressed()
+        //{
+        //    string ext = GetOriginalExtension();
+        //    string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+
+        //    SaveFileDialog dlg = new SaveFileDialog
+        //    {
+        //        Title = "Save Decompressed Audio",
+        //        Filter = filter,
+        //        FileName = Path.GetFileNameWithoutExtension(_inputFilePath) + "_decompressed" + ext
+        //    };
+
+        //    if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //    try
+        //    {
+        //        int sampleRate = GetDecompressedSampleRate();
+
+        //        using (MemoryStream ms = new MemoryStream(_decompressedPcmBytes))
+        //        using (var raw = new NAudio.Wave.RawSourceWaveStream(
+        //            ms, new NAudio.Wave.WaveFormat(sampleRate, 16, 1)))
+        //        using (var writer = new NAudio.Wave.WaveFileWriter(dlg.FileName, raw.WaveFormat))
+        //        {
+        //            byte[] buf = new byte[4096];
+        //            int read;
+        //            while ((read = raw.Read(buf, 0, buf.Length)) > 0)
+        //                writer.Write(buf, 0, read);
+        //        }
+
+        //        MessageBox.Show($"Saved to:\n{dlg.FileName}",
+        //            "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Save failed: " + ex.Message, "Error",
+        //            MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
+
+        //private void SaveCompressed()
+        //{
+        //    string ext = GetOriginalExtension();
+        //    string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+        //    string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+
+        //    SaveFileDialog dlg = new SaveFileDialog
+        //    {
+        //        Title = "Save Compressed Audio",
+        //        Filter = filter,
+        //        FileName = Path.GetFileNameWithoutExtension(_inputFilePath) + "_" + GetAlgoSuffix() + ext
+        //    };
+
+        //    if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //    try
+        //    {
+        //        using (FileStream fs = new FileStream(dlg.FileName, FileMode.Create))
+        //        using (BinaryWriter bw = new BinaryWriter(fs))
+        //        {
+        //            switch (selectedAlgorithm)
+        //            {
+        //                case "DPCM":
+        //                    bw.Write("DPCM".ToCharArray());
+        //                    bw.Write(_compressedMetadata.SampleRate);
+        //                    bw.Write(_compressedMetadata.Bits);
+        //                    bw.Write(_compressedMetadata.TotalSamples);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Mu-Law":
+        //                case "A-Law":
+        //                    //string tag = selectedAlgorithm == "Mu-Law" ? "MULAW" : "ALAW_";
+        //                    //bw.Write(tag.ToCharArray());
+        //                    //bw.Write(_compandingMetadata.SampleRate);
+        //                    //bw.Write(_compandingMetadata.BitDepth);
+        //                    //bw.Write(_compandingMetadata.Channels);
+        //                    //bw.Write(_compandingMetadata.TotalSamples);
+        //                    //bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Delta Modulation":
+        //                    bw.Write("DM__".ToCharArray());
+        //                    bw.Write(_dmMetadata.SampleRate);
+        //                    bw.Write(_dmMetadata.TotalSamples);
+        //                    bw.Write(_dmMetadata.StepSize);
+        //                    bw.Write(_dmMetadata.LpfCutoff);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Adaptive Delta Modulation":
+        //                    bw.Write("ADM_".ToCharArray());
+        //                    bw.Write(_admMetadata.SampleRate);
+        //                    bw.Write(_admMetadata.TotalSamples);
+        //                    bw.Write(_admMetadata.InitStepSize);
+        //                    bw.Write(_admMetadata.AdaptationFactor);
+        //                    bw.Write(_admMetadata.MaxStepSize);
+        //                    bw.Write(_admMetadata.HistoryBits);
+        //                    bw.Write(_admMetadata.LpfCutoff);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Adaptive Predictive":
+        //                    bw.Write("AP__".ToCharArray());
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+        //            }
+        //        }
+
+        //        MessageBox.Show($"Saved to:\n{dlg.FileName}",
+        //            "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Save failed: " + ex.Message, "Error",
+        //            MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
+
+        // SAVE THAT SHOULD WORK ON BATOULS'
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_originalFilePath))
+            {
+                MessageBox.Show("No file loaded.", "Nothing to Save",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_isDecompressed && _decompressedPcmBytes != null)
+                SaveDecompressed();
+            else if (_copied_audio != null)
+                SaveCompressed();
+            else
+            {
+                string ext = GetOriginalExtension();
+                string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+
+                SaveFileDialog dlg = new SaveFileDialog
+                {
+                    Title = "Save Audio",
+                    Filter = filter,
+                    FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + ext
+                };
+
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+
+                try
+                {
+                    File.Copy(_originalFilePath, dlg.FileName, overwrite: true);
+                    MessageBox.Show($"Saved to:\n{dlg.FileName}",
+                        "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Save failed: " + ex.Message, "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private string GetOriginalExtension()
+        {
+            return Path.GetExtension(_originalFilePath).ToLower();
+        }
+
+        private string GetAlgoSuffix()
+        {
+            switch (cmbAlgorithmType.SelectedItem?.ToString())
+            {
+                case "DPCM": return "dpcm";
+                case "Mu-Law": return "mulaw";
+                case "A-Law": return "alaw";
+                case "Delta Modulation": return "dm";
+                case "Adaptive Delta Modulation": return "adm";
+                case "Adaptive Predictive": return "ap";
+                default: return "compressed";
+            }
+        }
+
+        private void SaveDecompressed()
+        {
+            string ext = GetOriginalExtension();
+            string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+
+            SaveFileDialog dlg = new SaveFileDialog
+            {
+                Title = "Save Decompressed Audio",
+                Filter = filter,
+                FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + "_decompressed" + ext
+            };
+
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+
+            try
+            {
+                int sampleRate = GetDecompressedSampleRate();
+
+                using (MemoryStream ms = new MemoryStream(_decompressedPcmBytes))
+                using (var raw = new NAudio.Wave.RawSourceWaveStream(
+                    ms, new NAudio.Wave.WaveFormat(sampleRate, 16, 1)))
+                using (var writer = new NAudio.Wave.WaveFileWriter(dlg.FileName, raw.WaveFormat))
+                {
+                    byte[] buf = new byte[4096];
+                    int read;
+                    while ((read = raw.Read(buf, 0, buf.Length)) > 0)
+                        writer.Write(buf, 0, read);
+                }
+
+                MessageBox.Show($"Saved to:\n{dlg.FileName}",
+                    "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Save failed: " + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void SaveCompressed()
+        {
+            string ext = GetOriginalExtension();
+            string filter = ext == ".mp3" ? "MP3 Audio|*.mp3" : "WAV Audio|*.wav";
+            string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+
+            SaveFileDialog dlg = new SaveFileDialog
+            {
+                Title = "Save Compressed Audio",
+                Filter = filter,
+                FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + "_" + GetAlgoSuffix() + ext
+            };
+
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+
+            try
+            {
+                using (FileStream fs = new FileStream(dlg.FileName, FileMode.Create))
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    switch (selectedAlgorithm)
+                    {
+                        case "DPCM":
+                            bw.Write("DPCM".ToCharArray());
+                            bw.Write(_compressedMetadata.SampleRate);
+                            bw.Write(_compressedMetadata.Bits);
+                            bw.Write(_compressedMetadata.TotalSamples);
+                            bw.Write(_copied_audio.Length);
+                            bw.Write(_copied_audio);
+                            break;
+
+                        case "Mu-Law":
+                        case "A-Law":
+                            string tag = selectedAlgorithm == "Mu-Law" ? "MULAW" : "ALAW_";
+                            bw.Write(tag.ToCharArray());
+                            bw.Write(_compandingMetadata.SampleRate);
+                            bw.Write(_compandingMetadata.BitDepth);
+                            bw.Write(_compandingMetadata.Channels);
+                            bw.Write(_compandingMetadata.TotalSamples);
+                            // strip the 44-byte WAV header, save only raw compressed bytes
+                            int wavHeaderSize = 44;
+                            int rawLength = _copied_audio.Length - wavHeaderSize;
+                            bw.Write(rawLength);
+                            bw.Write(_copied_audio, wavHeaderSize, rawLength);
+                            break;
+
+                        case "Delta Modulation":
+                            bw.Write("DM__".ToCharArray());
+                            bw.Write(_dmMetadata.SampleRate);
+                            bw.Write(_dmMetadata.TotalSamples);
+                            bw.Write(_dmMetadata.StepSize);
+                            bw.Write(_dmMetadata.LpfCutoff);
+                            bw.Write(_copied_audio.Length);
+                            bw.Write(_copied_audio);
+                            break;
+
+                        case "Adaptive Delta Modulation":
+                            bw.Write("ADM_".ToCharArray());
+                            bw.Write(_admMetadata.SampleRate);
+                            bw.Write(_admMetadata.TotalSamples);
+                            bw.Write(_admMetadata.InitStepSize);
+                            bw.Write(_admMetadata.AdaptationFactor);
+                            bw.Write(_admMetadata.MaxStepSize);
+                            bw.Write(_admMetadata.HistoryBits);
+                            bw.Write(_admMetadata.LpfCutoff);
+                            bw.Write(_copied_audio.Length);
+                            bw.Write(_copied_audio);
+                            break;
+
+                        case "Adaptive Predictive":
+                            bw.Write("AP__".ToCharArray());
+                            bw.Write(_copied_audio.Length);
+                            bw.Write(_copied_audio);
+                            break;
+                    }
+                }
+
+                MessageBox.Show($"Saved to:\n{dlg.FileName}",
+                    "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Save failed: " + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        
     }
 }
