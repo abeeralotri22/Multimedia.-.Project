@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WindowsFormsApp2
@@ -13,7 +14,8 @@ namespace WindowsFormsApp2
 
         public byte[] Compress(float[] samples, int sampleRate,
                                Dictionary<string, object> parameters,
-                               Action<int, long, long> reportProgress)
+                               Action<int, long, long> reportProgress,
+                               CancellationToken cancellationToken = default)
         {
             int bits = (int)parameters["bits"];
             int predictorType = (int)parameters["predictorType"];
@@ -54,6 +56,8 @@ namespace WindowsFormsApp2
                     // تقرير كل 1000 سامبل
                     if (n % 250 == 0)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                            return null;
                         int percent = (int)((double)n / samples.Length * 100);
                         reportProgress(percent, n, ms.Length);
                         //System.Threading.Thread.Sleep(1);

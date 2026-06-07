@@ -62,13 +62,13 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.ComboBox cmbSampleRate1; // وهذا أيضاً
 
 
-        // REQUIREMENT 7
+        // REQUIREMENT 7 + 8
         private List<float> _ratioHistory = new List<float>();
         private List<float> _speedHistory = new List<float>();
         private long _originalFileSize = 0;
         private DateTime _compressionStartTime;
         private System.Windows.Forms.Timer _chartTimer;
-        //private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public class DpcmMetadata
         {
@@ -1259,9 +1259,11 @@ namespace WindowsFormsApp2
                 btnRunDecompression.Enabled = false;
                 this.Cursor = Cursors.WaitCursor;
                 ResetProgressUI();
+                _cancellationTokenSource = new CancellationTokenSource();
+                btnCancelCompression.Enabled = true;
                 _chartTimer.Start();
 
-                // ===== الخوارزميات اللي تستخدم الـ interface =====
+                //  الخوارزميات   interface 
                 if (selectedAlgorithm != "Adaptive Predictive")
                 {
                     CompressionInterface algorithm = GetSelectedAlgorithm();
@@ -1272,7 +1274,7 @@ namespace WindowsFormsApp2
                         return;
                     }
 
-                    // اجمعي الـ parameters حسب الخوارزمية
+                    //  parameters حسب الخوارزمية
                     var parameters = new Dictionary<string, object>();
                     float[] samples;
                     int targetSampleRate = 16000;
@@ -1310,7 +1312,7 @@ namespace WindowsFormsApp2
                         parameters["lpfCutoff"] = (int)numLpfCutoff.Value;
                     }
 
-                    // اقرأي الصوت
+                    // قراءة الصوت
                     using (var reader = new AudioFileReader(_inputFilePath))
                     {
                         int channels = 1;
@@ -1330,15 +1332,30 @@ namespace WindowsFormsApp2
                         parameters["totalSamples"] = samplesRead;
                     }
 
-                    // شغّلي الضغط
+                    // تشغيل الضغط
                     byte[] result = await Task.Run(() =>
-                        algorithm.Compress(samples, targetSampleRate, parameters,
-                            (percent, samplesProcessed, bytesWritten) =>
-                                UpdateProgressUI(percent, samplesProcessed, bytesWritten)));
+                    algorithm.Compress(samples, targetSampleRate, parameters,
+                        (percent, samplesProcessed, bytesWritten) =>
+                            UpdateProgressUI(percent, samplesProcessed, bytesWritten),
+                        _cancellationTokenSource.Token));
 
                     _copied_audio = result;
+                    if (_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        progressBar.Value = 0;
+                        lblProgressPercent.Text = "Cancelled";
+                        lblChartRatio.Text = "Compression Ratio: —";
+                        lblChartSpeed.Text = "Processing Speed: —";
+                        _ratioHistory.Clear();
+                        _speedHistory.Clear();
+                        DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
+                        DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", 1f);
+                        MessageBox.Show("Compression cancelled.", "Cancelled",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
 
-                    // احفظي الـ metadata
+                    // حفظ  metadata
                     if (selectedAlgorithm == "DPCM")
                     {
                         _compressedMetadata = new DpcmMetadata
@@ -1387,7 +1404,7 @@ namespace WindowsFormsApp2
                     }
                 }
 
-                // ===== Adaptive Predictive — ما عندها interface =====
+                //  Adaptive Predictive بدون interface حاليا
                 else
                 {
                     if (cmbSampleRate.SelectedItem == null || numLevels == null || numPredictionOrder == null)
@@ -1433,7 +1450,7 @@ namespace WindowsFormsApp2
                     });
                 }
 
-                // ===== نهاية الضغط =====
+                // نهاية الضغط 
                 _chartTimer.Stop();
                 progressBar.Value = 100;
                 lblProgressPercent.Text = "100% — Done!";
@@ -1464,6 +1481,8 @@ namespace WindowsFormsApp2
                                 $"Compression Ratio: {ratio:F2}x",
                                 "Metrics Preview", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+
+           
             catch (Exception ex)
             {
                 MessageBox.Show($"Compression failed: {ex.Message}", "Error",
@@ -1472,6 +1491,7 @@ namespace WindowsFormsApp2
             finally
             {
                 _chartTimer.Stop();
+                btnCancelCompression.Enabled = false;
                 btnRunCompression.Enabled = true;
                 btnRunDecompression.Enabled = true;
                 this.Cursor = Cursors.Default;
@@ -2741,12 +2761,14 @@ namespace WindowsFormsApp2
             lblProgressPercent.Text = "Starting...";
         }
 
-        private void label2_Click(object sender, EventArgs e)
+        private void btnCancelCompression_Click(object sender, EventArgs e)
         {
-
+            _cancellationTokenSource?.Cancel();
+            btnCancelCompression.Enabled = false;
+            lblProgressPercent.Text = "Cancelling...";
         }
 
-       
+
     }
 
 

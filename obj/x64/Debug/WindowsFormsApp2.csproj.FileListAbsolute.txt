@@ -1,0 +1,114 @@
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.exe.config
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.exe
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.pdb
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Emgu.CV.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Microsoft.Bcl.AsyncInterfaces.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Microsoft.Win32.Registry.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Asio.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Core.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Midi.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Wasapi.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.WinForms.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.WinMM.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Buffers.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.IO.Pipelines.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Memory.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Numerics.Vectors.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Resources.Extensions.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Security.AccessControl.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Security.Principal.Windows.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Text.Encodings.Web.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Text.Json.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Threading.Tasks.Extensions.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.ValueTuple.dll
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Emgu.CV.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Microsoft.Bcl.AsyncInterfaces.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\Microsoft.Win32.Registry.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Asio.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Core.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Midi.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.Wasapi.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.WinForms.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\NAudio.WinMM.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Buffers.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.IO.Pipelines.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Memory.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Numerics.Vectors.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Resources.Extensions.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Security.AccessControl.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Security.Principal.Windows.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Text.Encodings.Web.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Text.Json.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.Threading.Tasks.Extensions.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\bin\x64\Debug\System.ValueTuple.xml
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.AudioInfoForm.resources
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.CompressionForm.resources
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.Form1.resources
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.Properties.Resources.resources
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.GenerateResource.cache
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.CoreCompileInputs.cache
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.CopyComplete
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.exe
+C:\Users\VICTUS\source\repos\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.pdb
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.exe.config
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.exe
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\WindowsFormsApp2.pdb
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Emgu.CV.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Microsoft.Bcl.AsyncInterfaces.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Microsoft.Win32.Registry.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Asio.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Core.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Midi.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Wasapi.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.WinForms.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.WinMM.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Buffers.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.IO.Pipelines.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Memory.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Numerics.Vectors.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Resources.Extensions.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Security.AccessControl.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Security.Principal.Windows.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Text.Encodings.Web.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Text.Json.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Threading.Tasks.Extensions.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.ValueTuple.dll
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Emgu.CV.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Microsoft.Bcl.AsyncInterfaces.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\Microsoft.Win32.Registry.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Asio.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Core.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Midi.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.Wasapi.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.WinForms.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\NAudio.WinMM.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Buffers.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.IO.Pipelines.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Memory.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Numerics.Vectors.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Resources.Extensions.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Security.AccessControl.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Security.Principal.Windows.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Text.Encodings.Web.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Text.Json.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.Threading.Tasks.Extensions.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\bin\x64\Debug\System.ValueTuple.xml
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.AssemblyReference.cache
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.AudioInfoForm.resources
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.CompressionForm.resources
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.Form1.resources
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.Properties.Resources.resources
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.GenerateResource.cache
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.csproj.CoreCompileInputs.cache
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsF.EA766B00.Up2Date
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.exe
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.pdb
+C:\Users\LEGION\visual studio projects\c#\multimediaCompressAudio\Multimedia.-.Project\obj\x64\Debug\WindowsFormsApp2.exe.config

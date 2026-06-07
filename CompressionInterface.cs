@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -15,7 +16,8 @@ namespace WindowsFormsApp2
         // مثال: parameters["bits"] = 4, parameters["predictorType"] = 1
         byte[] Compress(float[] samples, int sampleRate,
                         Dictionary<string, object> parameters,
-                        Action<int, long, long> reportProgress);
+                        Action<int, long, long> reportProgress,
+                        CancellationToken cancellationToken = default);
 
     }
 }

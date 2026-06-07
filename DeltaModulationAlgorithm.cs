@@ -1,7 +1,8 @@
-﻿using NAudio.Wave;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using NAudio.Wave;
 
 namespace WindowsFormsApp2
 {
@@ -11,7 +12,8 @@ namespace WindowsFormsApp2
 
         public byte[] Compress(float[] samples, int sampleRate,
                                Dictionary<string, object> parameters,
-                               Action<int, long, long> reportProgress)
+                               Action<int, long, long> reportProgress,
+                               CancellationToken cancellationToken = default)
         {
             float stepSize = Convert.ToSingle(parameters["stepSize"]);
 
@@ -46,8 +48,10 @@ namespace WindowsFormsApp2
                         bitCounter = 0;
                     }
 
-                    if (n % 1000 == 0)
+                    if (n % 250 == 0)
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                            return null;
                         int percent = (int)((double)n / samples.Length * 100);
                         reportProgress(percent, n, ms.Length);
                     }

@@ -177,6 +177,7 @@ namespace WindowsFormsApp2
             this.chartCompressRatio = new System.Windows.Forms.PictureBox();
             this.label3 = new System.Windows.Forms.Label();
             this.chartSpeed = new System.Windows.Forms.PictureBox();
+            this.btnCancelCompression = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.waveformPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantBits)).BeginInit();
             this.pnlParameters.SuspendLayout();
@@ -421,11 +422,25 @@ namespace WindowsFormsApp2
             this.chartSpeed.TabIndex = 16;
             this.chartSpeed.TabStop = false;
             // 
+            // btnCancelCompression
+            // 
+            this.btnCancelCompression.BackColor = System.Drawing.Color.IndianRed;
+            this.btnCancelCompression.Enabled = false;
+            this.btnCancelCompression.ForeColor = System.Drawing.Color.White;
+            this.btnCancelCompression.Location = new System.Drawing.Point(894, 540);
+            this.btnCancelCompression.Name = "btnCancelCompression";
+            this.btnCancelCompression.Size = new System.Drawing.Size(234, 35);
+            this.btnCancelCompression.TabIndex = 17;
+            this.btnCancelCompression.Text = "Cancel";
+            this.btnCancelCompression.UseVisualStyleBackColor = false;
+            this.btnCancelCompression.Click += new System.EventHandler(this.btnCancelCompression_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(2131, 1303);
+            this.Controls.Add(this.btnCancelCompression);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.label2);
@@ -482,5 +497,6 @@ namespace WindowsFormsApp2
         private System.Windows.Forms.PictureBox chartCompressRatio;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.PictureBox chartSpeed;
+        private System.Windows.Forms.Button btnCancelCompression;
     }
 }

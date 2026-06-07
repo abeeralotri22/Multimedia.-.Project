@@ -1,7 +1,8 @@
-﻿using NAudio.Wave;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using NAudio.Wave;
 
 namespace WindowsFormsApp2
 {
@@ -13,7 +14,8 @@ namespace WindowsFormsApp2
 
         public byte[] Compress(float[] samples, int sampleRate,
                                Dictionary<string, object> parameters,
-                               Action<int, long, long> reportProgress)
+                               Action<int, long, long> reportProgress,
+                               CancellationToken cancellationToken = default)
         {
             int bitDepth = (int)parameters["bitDepth"];
             int channels = (int)parameters["channels"];
@@ -25,8 +27,10 @@ namespace WindowsFormsApp2
                 double companded = ApplyALaw(samples[i]);
                 compressedBytes[i] = QuantizeToByte(companded, bitDepth);
 
-                if (i % 1000 == 0)
+                if (i % 250 == 0)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        return null;
                     int percent = (int)((double)i / samples.Length * 100);
                     reportProgress(percent, i, i);
                 }
