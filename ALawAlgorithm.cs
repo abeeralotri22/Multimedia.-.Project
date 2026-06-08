@@ -27,7 +27,7 @@ namespace WindowsFormsApp2
                 double companded = ApplyALaw(samples[i]);
                 compressedBytes[i] = QuantizeToByte(companded, bitDepth);
 
-                if (i % 250 == 0)
+                if (i % 2000 == 0)
                 {
                     if (cancellationToken.IsCancellationRequested)
                         return null;
