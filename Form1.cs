@@ -1618,6 +1618,7 @@ namespace WindowsFormsApp2
                         _speedHistory.Clear();
                         DrawChart(chartCompressRatio, _ratioHistory, Color.Blue, "Ratio %", 100f);
                         DrawChart(chartSpeed, _speedHistory, Color.Green, "Samples/sec", 1f);
+                        btnRunCompression.Enabled = true; // ← add this
                         MessageBox.Show("Compression cancelled.", "Cancelled",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;

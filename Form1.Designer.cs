@@ -447,7 +447,7 @@ namespace WindowsFormsApp2
             this.btnCancelCompression.TabIndex = 17;
             this.btnCancelCompression.Text = "Cancel";
             this.btnCancelCompression.UseVisualStyleBackColor = false;
-            this.btnCancelCompression.Click += new System.EventHandler(this.btnShowReport_Click);
+            this.btnCancelCompression.Click += new System.EventHandler(this.btnCancelCompression_Click);
             // 
             // btnShowReport
             // 
