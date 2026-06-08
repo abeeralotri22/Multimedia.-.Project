@@ -55,7 +55,7 @@ namespace WindowsFormsApp2
                     prevSample1 = (short)reconstructedSample;
 
                     // تقرير كل 1000 سامبل
-                    if (n % 250 == 0)
+                    if (n % 2000 == 0)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             return null;

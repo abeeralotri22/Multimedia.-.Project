@@ -72,7 +72,7 @@ namespace WindowsFormsApp2
                         bitCounter = 0;
                     }
 
-                    if (n % 250 == 0)
+                    if (n % 2000 == 0)
                     {
                         if (cancellationToken.IsCancellationRequested)
                             return null;
