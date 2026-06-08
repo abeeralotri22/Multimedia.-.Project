@@ -2579,6 +2579,12 @@ namespace WindowsFormsApp2
                     _isDecompressed = true;
                     DrawWaveformFromPcm(_decompressedPcmBytes, _compandingMetadata.SampleRate);
 
+                    MessageBox.Show(
+                    $"Decompression complete!\n\n" +
+                    $"Decompressed Size: {FormatBytes(_decompressedPcmBytes.Length)}\n" +
+                    $"MSE: {compandingMse:F2}",
+                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                     return;
                 }
                 else if (selectedAlgorithm == "Delta Modulation")
@@ -2667,7 +2673,11 @@ namespace WindowsFormsApp2
 
                 long decompressedSize = _decompressedPcmBytes.Length;
                 double mse = CalculateMSE();
-               
+                MessageBox.Show(
+                $"Decompression complete!\n\n" +
+                $"Decompressed Size: {FormatBytes(decompressedSize)}\n" +
+                $"MSE: {mse:F2}",
+                "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             }
 
