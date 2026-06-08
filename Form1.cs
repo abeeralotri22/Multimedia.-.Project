@@ -3167,7 +3167,7 @@ namespace WindowsFormsApp2
             }
             long compressedMemoryBytes = _copied_audio.Length;
 
-            this.uncompressedSizeFormatted.Text = $"Before: {FormatBytes(uncompressedMemoryBytes)}";
+            this.uncompressedSizeFormatted.Text = $"Before: {FormatBytes(_originalFileSize)}";
             this.compressedSizeFormatted.Text = $"After: {FormatBytes(compressedMemoryBytes)}";
 
             double ratio = (double)(uncompressedMemoryBytes-compressedMemoryBytes)  / uncompressedMemoryBytes * 100;
