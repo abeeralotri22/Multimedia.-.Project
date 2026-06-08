@@ -748,7 +748,7 @@ namespace WindowsFormsApp2
             cmbSamplingRate.SelectedIndex = 1;
 
             Label lblBits = new Label { Text = "Quantization Bits:", Location = new Point(10, 55), AutoSize = true };
-            numQuantBits = new NumericUpDown { Location = new Point(150, 52), Width = 120, Minimum = 2, Maximum = 8, Value =6 };
+            numQuantBits = new NumericUpDown { Location = new Point(150, 52), Width = 120, Minimum = 2, Maximum = 8, Value = 6 };
 
             Label lblPredictor = new Label { Text = "Predictor Filter:", Location = new Point(10, 95), AutoSize = true };
             cmbPredictorType = new System.Windows.Forms.ComboBox { Location = new Point(150, 92), Width = 120 };
@@ -1748,8 +1748,8 @@ namespace WindowsFormsApp2
                 long compressedSize = _copied_audio.Length;
                 double ratio = (double)originalSize / compressedSize;
 
-              
-              
+
+
             }
 
 
@@ -2550,7 +2550,7 @@ namespace WindowsFormsApp2
                 if (selectedAlgorithm == "DPCM")
                 {
                     ExecuteDpcmDecompressionToMemory();
-                 
+
                 }
                 //else if (selectedAlgorithm == "Mu-Law" || selectedAlgorithm == "A-Law")
                 //{
@@ -3180,9 +3180,10 @@ namespace WindowsFormsApp2
             this.uncompressedSizeFormatted.Text = $"Before: {FormatBytes(_originalFileSize)}";
             this.compressedSizeFormatted.Text = $"After: {FormatBytes(compressedMemoryBytes)}";
 
-            double ratio = (double)(uncompressedMemoryBytes-compressedMemoryBytes)  / uncompressedMemoryBytes * 100;
+            double ratio = (double)(uncompressedMemoryBytes - compressedMemoryBytes) / uncompressedMemoryBytes * 100;
 
-            Action<string, string> addProp = (key, val) => {
+            Action<string, string> addProp = (key, val) =>
+            {
                 var item = new ListViewItem(key);
                 item.SubItems.Add(val);
                 item.Font = new Font("Segoe UI", 9, FontStyle.Regular);
@@ -3560,24 +3561,24 @@ namespace WindowsFormsApp2
         //}
 
 
-        private string GetOriginalExtension()
-        {
-            return Path.GetExtension(_originalFilePath).ToLower();
-        }
+        //private string GetOriginalExtension()
+        //{
+        //    return Path.GetExtension(_originalFilePath).ToLower();
+        //}
 
-        private string GetAlgoSuffix()
-        {
-            switch (cmbAlgorithmType.SelectedItem?.ToString())
-            {
-                case "DPCM": return "dpcm";
-                case "Mu-Law": return "mulaw";
-                case "A-Law": return "alaw";
-                case "Delta Modulation": return "dm";
-                case "Adaptive Delta Modulation": return "adm";
-                case "Adaptive Predictive": return "ap";
-                default: return "compressed";
-            }
-        }
+        //private string GetAlgoSuffix()
+        //{
+        //    switch (cmbAlgorithmType.SelectedItem?.ToString())
+        //    {
+        //        case "DPCM": return "dpcm";
+        //        case "Mu-Law": return "mulaw";
+        //        case "A-Law": return "alaw";
+        //        case "Delta Modulation": return "dm";
+        //        case "Adaptive Delta Modulation": return "adm";
+        //        case "Adaptive Predictive": return "ap";
+        //        default: return "compressed";
+        //    }
+        //}
 
         //private void SaveDecompressed()
         //{
@@ -3706,190 +3707,350 @@ namespace WindowsFormsApp2
 
         //}
 
-        private void btnLoadCustomCompressed_Click(object sender, EventArgs e)
-        {
-            // Combined filter allows displaying both extensions at the same time
-            OpenFileDialog dlg = new OpenFileDialog
-            {
-                Title = "Open Custom Compressed Audio File to Decompress",
-                Filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3"
-            };
+        //private void btnLoadCustomCompressed_Click(object sender, EventArgs e)
+        //{
+        //    // Combined filter allows displaying both extensions at the same time
+        //    OpenFileDialog dlg = new OpenFileDialog
+        //    {
+        //        Title = "Open Custom Compressed Audio File to Decompress",
+        //        Filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3"
+        //    };
 
-            if (dlg.ShowDialog() != DialogResult.OK) return;
+        //    if (dlg.ShowDialog() != DialogResult.OK) return;
 
-            try
-            {
-                this.Cursor = Cursors.WaitCursor;
+        //    try
+        //    {
+        //        this.Cursor = Cursors.WaitCursor;
 
-                // Track the path of the file we are explicitly decompressing
-                audioPath = dlg.FileName;
-                _originalFilePath = dlg.FileName;
+        //        // Track the path of the file we are explicitly decompressing
+        //        audioPath = dlg.FileName;
+        //        _originalFilePath = dlg.FileName;
 
-                using (FileStream fs = new FileStream(dlg.FileName, FileMode.Open, FileAccess.Read))
-                using (BinaryReader br = new BinaryReader(fs))
-                {
-                    if (fs.Length < 4)
-                    {
-                        MessageBox.Show("Invalid file structure. Corrupted or missing compression identifier tag.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        this.Cursor = Cursors.Default;
-                        return;
-                    }
+        //        using (FileStream fs = new FileStream(dlg.FileName, FileMode.Open, FileAccess.Read))
+        //        using (BinaryReader br = new BinaryReader(fs))
+        //        {
+        //            if (fs.Length < 4)
+        //            {
+        //                MessageBox.Show("Invalid file structure. Corrupted or missing compression identifier tag.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //                this.Cursor = Cursors.Default;
+        //                return;
+        //            }
 
-                    string identifierTag = new string(br.ReadChars(4));
-                    int dataLength = 0;
+        //            string identifierTag = new string(br.ReadChars(4));
+        //            int dataLength = 0;
 
-                    switch (identifierTag)
-                    {
-                        case "DPCM":
-                            _lastUsedAlgorithmName = "DPCM";
-                            if (_compressedMetadata == null) _compressedMetadata = new DpcmMetadata();
+        //            switch (identifierTag)
+        //            {
+        //                case "DPCM":
+        //                    _lastUsedAlgorithmName = "DPCM";
+        //                    if (_compressedMetadata == null) _compressedMetadata = new DpcmMetadata();
 
-                            _compressedMetadata.SampleRate = br.ReadInt32();
-                            _compressedMetadata.Bits = br.ReadByte();
-                            _compressedMetadata.TotalSamples = br.ReadInt32();
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                    _compressedMetadata.SampleRate = br.ReadInt32();
+        //                    _compressedMetadata.Bits = br.ReadByte();
+        //                    _compressedMetadata.TotalSamples = br.ReadInt32();
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        case "MULA":
-                            br.ReadChar();
-                            _lastUsedAlgorithmName = "Mu-Law";
-                            if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
+        //                case "MULA":
+        //                    br.ReadChar();
+        //                    _lastUsedAlgorithmName = "Mu-Law";
+        //                    if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
 
-                            _compandingMetadata.Algorithm = "Mu-Law";
-                            _compandingMetadata.SampleRate = br.ReadInt32();
-                            _compandingMetadata.BitDepth = br.ReadByte();
-                            _compandingMetadata.Channels = br.ReadInt32();
-                            _compandingMetadata.TotalSamples = br.ReadInt32();
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                    _compandingMetadata.Algorithm = "Mu-Law";
+        //                    _compandingMetadata.SampleRate = br.ReadInt32();
+        //                    _compandingMetadata.BitDepth = br.ReadByte();
+        //                    _compandingMetadata.Channels = br.ReadInt32();
+        //                    _compandingMetadata.TotalSamples = br.ReadInt32();
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        case "ALAW":
-                            br.ReadChar();
-                            _lastUsedAlgorithmName = "A-Law";
-                            if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
+        //                case "ALAW":
+        //                    br.ReadChar();
+        //                    _lastUsedAlgorithmName = "A-Law";
+        //                    if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
 
-                            _compandingMetadata.Algorithm = "A-Law";
-                            _compandingMetadata.SampleRate = br.ReadInt32();
-                            _compandingMetadata.BitDepth = br.ReadByte();
-                            _compandingMetadata.Channels = br.ReadInt32();
-                            _compandingMetadata.TotalSamples = br.ReadInt32();
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                    _compandingMetadata.Algorithm = "A-Law";
+        //                    _compandingMetadata.SampleRate = br.ReadInt32();
+        //                    _compandingMetadata.BitDepth = br.ReadByte();
+        //                    _compandingMetadata.Channels = br.ReadInt32();
+        //                    _compandingMetadata.TotalSamples = br.ReadInt32();
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        case "DM__":
-                            _lastUsedAlgorithmName = "Delta Modulation";
-                            if (_dmMetadata == null) _dmMetadata = new DmMetadata();
+        //                case "DM__":
+        //                    _lastUsedAlgorithmName = "Delta Modulation";
+        //                    if (_dmMetadata == null) _dmMetadata = new DmMetadata();
 
-                            _dmMetadata.SampleRate = br.ReadInt32();
-                            _dmMetadata.TotalSamples = br.ReadInt32();
-                            _dmMetadata.StepSize = br.ReadSingle();
-                            _dmMetadata.LpfCutoff = br.ReadInt32();
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                    _dmMetadata.SampleRate = br.ReadInt32();
+        //                    _dmMetadata.TotalSamples = br.ReadInt32();
+        //                    _dmMetadata.StepSize = br.ReadSingle();
+        //                    _dmMetadata.LpfCutoff = br.ReadInt32();
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        case "ADM_":
-                            _lastUsedAlgorithmName = "Adaptive Delta Modulation";
-                            if (_admMetadata == null) _admMetadata = new AdmMetadata();
+        //                case "ADM_":
+        //                    _lastUsedAlgorithmName = "Adaptive Delta Modulation";
+        //                    if (_admMetadata == null) _admMetadata = new AdmMetadata();
 
-                            _admMetadata.SampleRate = br.ReadInt32();
-                            _admMetadata.TotalSamples = br.ReadInt32();
-                            _admMetadata.InitStepSize = br.ReadSingle();
-                            _admMetadata.AdaptationFactor = br.ReadSingle();
-                            _admMetadata.MaxStepSize = br.ReadSingle();
-                            _admMetadata.HistoryBits = br.ReadInt32();
-                            _admMetadata.LpfCutoff = br.ReadInt32();
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                    _admMetadata.SampleRate = br.ReadInt32();
+        //                    _admMetadata.TotalSamples = br.ReadInt32();
+        //                    _admMetadata.InitStepSize = br.ReadSingle();
+        //                    _admMetadata.AdaptationFactor = br.ReadSingle();
+        //                    _admMetadata.MaxStepSize = br.ReadSingle();
+        //                    _admMetadata.HistoryBits = br.ReadInt32();
+        //                    _admMetadata.LpfCutoff = br.ReadInt32();
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        case "AP__":
-                            _lastUsedAlgorithmName = "Adaptive Predictive";
-                            dataLength = br.ReadInt32();
-                            _copied_audio = br.ReadBytes(dataLength);
-                            break;
+        //                case "AP__":
+        //                    _lastUsedAlgorithmName = "Adaptive Predictive";
+        //                    dataLength = br.ReadInt32();
+        //                    _copied_audio = br.ReadBytes(dataLength);
+        //                    break;
 
-                        default:
-                            MessageBox.Show("Unknown or unhandled custom compressed file header format.", "Format Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            this.Cursor = Cursors.Default;
-                            return;
-                    }
-                }
+        //                default:
+        //                    MessageBox.Show("Unknown or unhandled custom compressed file header format.", "Format Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //                    this.Cursor = Cursors.Default;
+        //                    return;
+        //            }
+        //        }
 
-                _isDecompressed = false;
-                _decompressedPcmBytes = null;
+        //        _isDecompressed = false;
+        //        _decompressedPcmBytes = null;
 
-                if (cmbAlgorithmType != null)
-                {
-                    cmbAlgorithmType.SelectedItem = _lastUsedAlgorithmName;
-                }
+        //        if (cmbAlgorithmType != null)
+        //        {
+        //            cmbAlgorithmType.SelectedItem = _lastUsedAlgorithmName;
+        //        }
 
-                // Direct automated decompression execution based on file header parsing
-                if (_lastUsedAlgorithmName == "DPCM")
-                {
-                    ExecuteDpcmDecompressionToMemory();
-                }
-                else if (_lastUsedAlgorithmName == "Mu-Law" || _lastUsedAlgorithmName == "A-Law")
-                {
-                    ExecuteCompandingDecompressionToMemory();
-                    _isDecompressed = true;
-                    DrawWaveformFromPcm(_decompressedPcmBytes, _compandingMetadata.SampleRate);
-                }
-                else if (_lastUsedAlgorithmName == "Delta Modulation")
-                {
-                    ExecuteDmDecompressionToMemory();
-                }
-                else if (_lastUsedAlgorithmName == "Adaptive Delta Modulation")
-                {
-                    ExecuteAdmDecompressionToMemory();
-                }
-                else if (_lastUsedAlgorithmName == "Adaptive Predictive")
-                {
-                    if (_originalSamples == null)
-                    {
-                        MessageBox.Show("Original audio sample arrays weren't cached in memory. Unable to complete Adaptive Predictive decompression.",
-                                        "Data Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        this.Cursor = Cursors.Default;
-                        return;
-                    }
+        //        // Direct automated decompression execution based on file header parsing
+        //        if (_lastUsedAlgorithmName == "DPCM")
+        //        {
+        //            ExecuteDpcmDecompressionToMemory();
+        //        }
+        //        else if (_lastUsedAlgorithmName == "Mu-Law" || _lastUsedAlgorithmName == "A-Law")
+        //        {
+        //            ExecuteCompandingDecompressionToMemory();
+        //            _isDecompressed = true;
+        //            DrawWaveformFromPcm(_decompressedPcmBytes, _compandingMetadata.SampleRate);
+        //        }
+        //        else if (_lastUsedAlgorithmName == "Delta Modulation")
+        //        {
+        //            ExecuteDmDecompressionToMemory();
+        //        }
+        //        else if (_lastUsedAlgorithmName == "Adaptive Delta Modulation")
+        //        {
+        //            ExecuteAdmDecompressionToMemory();
+        //        }
+        //        else if (_lastUsedAlgorithmName == "Adaptive Predictive")
+        //        {
+        //            if (_originalSamples == null)
+        //            {
+        //                MessageBox.Show("Original audio sample arrays weren't cached in memory. Unable to complete Adaptive Predictive decompression.",
+        //                                "Data Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //                this.Cursor = Cursors.Default;
+        //                return;
+        //            }
 
-                    CompressionEngine engine = new CompressionEngine();
-                    short[] pcmResult = engine.Decompress(
-                        _copied_audio,
-                        (int)numLevels.Value,
-                        (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), cmbMode.Text),
-                        (double)numStep.Value,
-                        _originalSamples.Length,
-                        (int)numPredictionOrder.Value
-                    );
+        //            CompressionEngine engine = new CompressionEngine();
+        //            short[] pcmResult = engine.Decompress(
+        //                _copied_audio,
+        //                (int)numLevels.Value,
+        //                (CompressionEngine.PredictionMode)Enum.Parse(typeof(CompressionEngine.PredictionMode), cmbMode.Text),
+        //                (double)numStep.Value,
+        //                _originalSamples.Length,
+        //                (int)numPredictionOrder.Value
+        //            );
 
-                    _decompressedPcmBytes = new byte[pcmResult.Length * 2];
-                    Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
-                }
+        //            _decompressedPcmBytes = new byte[pcmResult.Length * 2];
+        //            Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+        //        }
 
-                if (!_isDecompressed && _decompressedPcmBytes != null)
-                {
-                    _isDecompressed = true;
-                    DrawWaveformFromPcm(_decompressedPcmBytes, GetDecompressedSampleRate());
-                }
+        //        if (!_isDecompressed && _decompressedPcmBytes != null)
+        //        {
+        //            _isDecompressed = true;
+        //            DrawWaveformFromPcm(_decompressedPcmBytes, GetDecompressedSampleRate());
+        //        }
 
-                if (PlayAudiobtn != null) PlayAudiobtn.Enabled = true;
+        //        if (PlayAudiobtn != null) PlayAudiobtn.Enabled = true;
 
-                MessageBox.Show($"File processed instantly!\nLoaded & decompressed using: {_lastUsedAlgorithmName}.\n\nClick 'Play Audio' to listen.",
-                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Failed to complete inline load-and-decompress sequence: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-        }
+        //        MessageBox.Show($"File processed instantly!\nLoaded & decompressed using: {_lastUsedAlgorithmName}.\n\nClick 'Play Audio' to listen.",
+        //            "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Failed to complete inline load-and-decompress sequence: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //    finally
+        //    {
+        //        this.Cursor = Cursors.Default;
+        //    }
+        //}
+        //private void btnSave_Click(object sender, EventArgs e)
+        //{
+        //    if (string.IsNullOrEmpty(_originalFilePath))
+        //    {
+        //        MessageBox.Show("No file loaded.", "Nothing to Save",
+        //            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //        return;
+        //    }
+
+        //    if (_isDecompressed && _decompressedPcmBytes != null)
+        //        SaveDecompressed();
+        //    else if (_copied_audio != null)
+        //        SaveCompressed();
+        //    else
+        //    {
+        //        string ext = GetOriginalExtension();
+        //        // Combined selection filter profile
+        //        string filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3";
+
+        //        SaveFileDialog dlg = new SaveFileDialog
+        //        {
+        //            Title = "Save Audio",
+        //            Filter = filter,
+        //            FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + ext
+        //        };
+
+        //        if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //        try
+        //        {
+        //            File.Copy(_originalFilePath, dlg.FileName, overwrite: true);
+        //            MessageBox.Show($"Saved to:\n{dlg.FileName}", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show("Save failed: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        }
+        //    }
+        //}
+
+        //private void SaveDecompressed()
+        //{
+        //    string ext = GetOriginalExtension();
+        //    string filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3";
+
+        //    SaveFileDialog dlg = new SaveFileDialog
+        //    {
+        //        Title = "Save Decompressed Audio",
+        //        Filter = filter,
+        //        FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + "_decompressed" + ext
+        //    };
+
+        //    if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //    try
+        //    {
+        //        int sampleRate = GetDecompressedSampleRate();
+
+        //        using (MemoryStream ms = new MemoryStream(_decompressedPcmBytes))
+        //        using (var raw = new NAudio.Wave.RawSourceWaveStream(ms, new NAudio.Wave.WaveFormat(sampleRate, 16, 1)))
+        //        using (var writer = new NAudio.Wave.WaveFileWriter(dlg.FileName, raw.WaveFormat))
+        //        {
+        //            byte[] buf = new byte[4096];
+        //            int read;
+        //            while ((read = raw.Read(buf, 0, buf.Length)) > 0)
+        //                writer.Write(buf, 0, read);
+        //        }
+
+        //        MessageBox.Show($"Saved to:\n{dlg.FileName}", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Save failed: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
+
+        //private void SaveCompressed()
+        //{
+        //    string ext = GetOriginalExtension();
+        //    string filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3";
+        //    string selectedAlgorithm = cmbAlgorithmType.SelectedItem?.ToString();
+
+        //    SaveFileDialog dlg = new SaveFileDialog
+        //    {
+        //        Title = "Save Compressed Audio",
+        //        Filter = filter,
+        //        FileName = Path.GetFileNameWithoutExtension(_originalFilePath) + "_" + GetAlgoSuffix() + ext
+        //    };
+
+        //    if (dlg.ShowDialog() != DialogResult.OK) return;
+
+        //    try
+        //    {
+        //        using (FileStream fs = new FileStream(dlg.FileName, FileMode.Create))
+        //        using (BinaryWriter bw = new BinaryWriter(fs))
+        //        {
+        //            switch (selectedAlgorithm)
+        //            {
+        //                case "DPCM":
+        //                    bw.Write("DPCM".ToCharArray());
+        //                    bw.Write(_compressedMetadata.SampleRate);
+        //                    bw.Write(_compressedMetadata.Bits);
+        //                    bw.Write(_compressedMetadata.TotalSamples);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Mu-Law":
+        //                case "A-Law":
+        //                    string tag = selectedAlgorithm == "Mu-Law" ? "MULAW" : "ALAW_";
+        //                    bw.Write(tag.ToCharArray());
+        //                    bw.Write(_compandingMetadata.SampleRate);
+        //                    bw.Write(_compandingMetadata.BitDepth);
+        //                    bw.Write(_compandingMetadata.Channels);
+        //                    bw.Write(_compandingMetadata.TotalSamples);
+        //                    int wavHeaderSize = 44;
+        //                    int rawLength = _copied_audio.Length - wavHeaderSize;
+        //                    bw.Write(rawLength);
+        //                    bw.Write(_copied_audio, wavHeaderSize, rawLength);
+        //                    break;
+
+        //                case "Delta Modulation":
+        //                    bw.Write("DM__".ToCharArray());
+        //                    bw.Write(_dmMetadata.SampleRate);
+        //                    bw.Write(_dmMetadata.TotalSamples);
+        //                    bw.Write(_dmMetadata.StepSize);
+        //                    bw.Write(_dmMetadata.LpfCutoff);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Adaptive Delta Modulation":
+        //                    bw.Write("ADM_".ToCharArray());
+        //                    bw.Write(_admMetadata.SampleRate);
+        //                    bw.Write(_admMetadata.TotalSamples);
+        //                    bw.Write(_admMetadata.InitStepSize);
+        //                    bw.Write(_admMetadata.AdaptationFactor);
+        //                    bw.Write(_admMetadata.MaxStepSize);
+        //                    bw.Write(_admMetadata.HistoryBits);
+        //                    bw.Write(_admMetadata.LpfCutoff);
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+
+        //                case "Adaptive Predictive":
+        //                    bw.Write("AP__".ToCharArray());
+        //                    bw.Write(_copied_audio.Length);
+        //                    bw.Write(_copied_audio);
+        //                    break;
+        //            }
+        //        }
+
+        //        MessageBox.Show($"Saved to:\n{dlg.FileName}", "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Save failed: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
+
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(_originalFilePath))
@@ -3906,7 +4067,6 @@ namespace WindowsFormsApp2
             else
             {
                 string ext = GetOriginalExtension();
-                // Combined selection filter profile
                 string filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3";
 
                 SaveFileDialog dlg = new SaveFileDialog
@@ -3930,6 +4090,25 @@ namespace WindowsFormsApp2
             }
         }
 
+        private string GetOriginalExtension()
+        {
+            return Path.GetExtension(_originalFilePath).ToLower();
+        }
+
+        private string GetAlgoSuffix()
+        {
+            switch (cmbAlgorithmType.SelectedItem?.ToString())
+            {
+                case "DPCM": return "dpcm";
+                case "Mu-Law": return "mulaw";
+                case "A-Law": return "alaw";
+                case "Delta Modulation": return "dm";
+                case "Adaptive Delta Modulation": return "adm";
+                case "Adaptive Predictive": return "ap";
+                default: return "compressed";
+            }
+        }
+
         private void SaveDecompressed()
         {
             string ext = GetOriginalExtension();
@@ -3949,7 +4128,8 @@ namespace WindowsFormsApp2
                 int sampleRate = GetDecompressedSampleRate();
 
                 using (MemoryStream ms = new MemoryStream(_decompressedPcmBytes))
-                using (var raw = new NAudio.Wave.RawSourceWaveStream(ms, new NAudio.Wave.WaveFormat(sampleRate, 16, 1)))
+                using (var raw = new NAudio.Wave.RawSourceWaveStream(
+                    ms, new NAudio.Wave.WaveFormat(sampleRate, 16, 1)))
                 using (var writer = new NAudio.Wave.WaveFileWriter(dlg.FileName, raw.WaveFormat))
                 {
                     byte[] buf = new byte[4096];
@@ -4036,6 +4216,9 @@ namespace WindowsFormsApp2
 
                         case "Adaptive Predictive":
                             bw.Write("AP__".ToCharArray());
+                            // store total samples so we can decompress without _originalSamples
+                            int apTotalSamples = _originalSamples != null ? _originalSamples.Length : 0;
+                            bw.Write(apTotalSamples);
                             bw.Write(_copied_audio.Length);
                             bw.Write(_copied_audio);
                             break;
@@ -4049,6 +4232,246 @@ namespace WindowsFormsApp2
                 MessageBox.Show("Save failed: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void btnLoadCustomCompressed_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Title = "Open Custom Compressed Audio File to Decompress",
+                Filter = "All Supported Audio (*.wav;*.mp3)|*.wav;*.mp3|WAV Audio (*.wav)|*.wav|MP3 Audio (*.mp3)|*.mp3"
+            };
+
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+
+                audioPath = dlg.FileName;
+                _originalFilePath = dlg.FileName;
+
+                using (FileStream fs = new FileStream(dlg.FileName, FileMode.Open, FileAccess.Read))
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    if (fs.Length < 4)
+                    {
+                        MessageBox.Show("Invalid file structure.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.Cursor = Cursors.Default;
+                        return;
+                    }
+
+                    string identifierTag = new string(br.ReadChars(4));
+                    int dataLength = 0;
+
+                    switch (identifierTag)
+                    {
+                        case "DPCM":
+                            _lastUsedAlgorithmName = "DPCM";
+                            if (_compressedMetadata == null) _compressedMetadata = new DpcmMetadata();
+                            _compressedMetadata.SampleRate = br.ReadInt32();
+                            _compressedMetadata.Bits = br.ReadByte();
+                            _compressedMetadata.TotalSamples = br.ReadInt32();
+                            dataLength = br.ReadInt32();
+                            _copied_audio = br.ReadBytes(dataLength);
+                            break;
+
+                        case "MULA":
+                            br.ReadChar(); // 5th char 'W'
+                            _lastUsedAlgorithmName = "Mu-Law";
+                            if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
+                            _compandingMetadata.Algorithm = "Mu-Law";
+                            _compandingMetadata.SampleRate = br.ReadInt32();
+                            _compandingMetadata.BitDepth = br.ReadByte();
+                            _compandingMetadata.Channels = br.ReadInt32();
+                            _compandingMetadata.TotalSamples = br.ReadInt32();
+                            dataLength = br.ReadInt32();
+                            byte[] muRawBytes = br.ReadBytes(dataLength);
+                            using (MemoryStream muMs = new MemoryStream())
+                            using (WaveFileWriter muWfw = new WaveFileWriter(muMs,
+                                new WaveFormat(_compandingMetadata.SampleRate, 8, _compandingMetadata.Channels)))
+                            {
+                                muWfw.Write(muRawBytes, 0, muRawBytes.Length);
+                                muWfw.Flush();
+                                _copied_audio = muMs.ToArray();
+                            }
+                            break;
+
+                        case "ALAW":
+                            br.ReadChar(); // 5th char '_'
+                            _lastUsedAlgorithmName = "A-Law";
+                            if (_compandingMetadata == null) _compandingMetadata = new CompandingMetadata();
+                            _compandingMetadata.Algorithm = "A-Law";
+                            _compandingMetadata.SampleRate = br.ReadInt32();
+                            _compandingMetadata.BitDepth = br.ReadByte();
+                            _compandingMetadata.Channels = br.ReadInt32();
+                            _compandingMetadata.TotalSamples = br.ReadInt32();
+                            dataLength = br.ReadInt32();
+                            byte[] alRawBytes = br.ReadBytes(dataLength);
+                            using (MemoryStream alMs = new MemoryStream())
+                            using (WaveFileWriter alWfw = new WaveFileWriter(alMs,
+                                new WaveFormat(_compandingMetadata.SampleRate, 8, _compandingMetadata.Channels)))
+                            {
+                                alWfw.Write(alRawBytes, 0, alRawBytes.Length);
+                                alWfw.Flush();
+                                _copied_audio = alMs.ToArray();
+                            }
+                            break;
+
+                        case "DM__":
+                            _lastUsedAlgorithmName = "Delta Modulation";
+                            if (_dmMetadata == null) _dmMetadata = new DmMetadata();
+                            _dmMetadata.SampleRate = br.ReadInt32();
+                            _dmMetadata.TotalSamples = br.ReadInt32();
+                            _dmMetadata.StepSize = br.ReadSingle();
+                            _dmMetadata.LpfCutoff = br.ReadInt32();
+                            dataLength = br.ReadInt32();
+                            _copied_audio = br.ReadBytes(dataLength);
+                            break;
+
+                        case "ADM_":
+                            _lastUsedAlgorithmName = "Adaptive Delta Modulation";
+                            if (_admMetadata == null) _admMetadata = new AdmMetadata();
+                            _admMetadata.SampleRate = br.ReadInt32();
+                            _admMetadata.TotalSamples = br.ReadInt32();
+                            _admMetadata.InitStepSize = br.ReadSingle();
+                            _admMetadata.AdaptationFactor = br.ReadSingle();
+                            _admMetadata.MaxStepSize = br.ReadSingle();
+                            _admMetadata.HistoryBits = br.ReadInt32();
+                            _admMetadata.LpfCutoff = br.ReadInt32();
+                            dataLength = br.ReadInt32();
+                            _copied_audio = br.ReadBytes(dataLength);
+                            break;
+
+                        case "AP__":
+                            _lastUsedAlgorithmName = "Adaptive Predictive";
+                            int storedTotalSamples = br.ReadInt32(); // read total samples
+                            dataLength = br.ReadInt32();
+                            _copied_audio = br.ReadBytes(dataLength);
+                            // reconstruct a dummy _originalSamples with the right length
+                            // we only need the length for decompress, not the actual values
+                            _originalSamples = new short[storedTotalSamples];
+                            break;
+
+                        default:
+                            MessageBox.Show("Unknown compressed file format.", "Format Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            this.Cursor = Cursors.Default;
+                            return;
+                    }
+                }
+
+                _isDecompressed = false;
+                _decompressedPcmBytes = null;
+
+                if (cmbAlgorithmType != null)
+                    cmbAlgorithmType.SelectedItem = _lastUsedAlgorithmName;
+
+                if (_lastUsedAlgorithmName == "DPCM")
+                {
+                    ExecuteDpcmDecompressionToMemory();
+                }
+                else if (_lastUsedAlgorithmName == "Mu-Law" || _lastUsedAlgorithmName == "A-Law")
+                {
+                    ExecuteCompandingDecompressionToMemory();
+                    _isDecompressed = true;
+                    DrawWaveformFromPcm(_decompressedPcmBytes, _compandingMetadata.SampleRate);
+                }
+                else if (_lastUsedAlgorithmName == "Delta Modulation")
+                {
+                    ExecuteDmDecompressionToMemory();
+                }
+                else if (_lastUsedAlgorithmName == "Adaptive Delta Modulation")
+                {
+                    ExecuteAdmDecompressionToMemory();
+                }
+                //else if (_lastUsedAlgorithmName == "Adaptive Predictive")
+                //{
+                //    if (_originalSamples == null)
+                //    {
+                //        MessageBox.Show("Original audio samples were not cached. Cannot decompress Adaptive Predictive.",
+                //            "Data Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                //        this.Cursor = Cursors.Default;
+                //        return;
+                //    }
+
+                //    CompressionEngine engine = new CompressionEngine();
+                //    short[] pcmResult = engine.Decompress(
+                //        _copied_audio,
+                //        (int)numLevels.Value,
+                //        (CompressionEngine.PredictionMode)Enum.Parse(
+                //            typeof(CompressionEngine.PredictionMode), cmbMode.Text),
+                //        (double)numStep.Value,
+                //        _originalSamples.Length,
+                //        (int)numPredictionOrder.Value
+                //    );
+
+                //    _decompressedPcmBytes = new byte[pcmResult.Length * 2];
+                //    Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+                //}
+
+                else if (_lastUsedAlgorithmName == "Adaptive Predictive")
+                {
+                    if (_originalSamples == null)
+                    {
+                        MessageBox.Show("Original audio samples were not cached. Cannot decompress Adaptive Predictive.",
+                            "Data Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        this.Cursor = Cursors.Default;
+                        return;
+                    }
+
+                    int apSampleRate = 16000;
+                    byte[] actualCompressedData;
+                    using (MemoryStream apMs = new MemoryStream(_copied_audio))
+                    using (BinaryReader apBr = new BinaryReader(apMs))
+                    {
+                        apBr.ReadInt32();
+                        apBr.ReadInt32();
+                        apBr.ReadDouble();
+                        apSampleRate = apBr.ReadInt32();
+                        int apDataLen = apBr.ReadInt32();
+                        actualCompressedData = apBr.ReadBytes(apDataLen);
+                    }
+
+                    CompressionEngine engine = new CompressionEngine();
+                    short[] pcmResult = engine.Decompress(
+                        actualCompressedData,
+                        (int)numLevels.Value,
+                        (CompressionEngine.PredictionMode)Enum.Parse(
+                            typeof(CompressionEngine.PredictionMode), cmbMode.Text),
+                        (double)numStep.Value,
+                        _originalSamples.Length,
+                        (int)numPredictionOrder.Value
+                    );
+
+                    _decompressedPcmBytes = new byte[pcmResult.Length * 2];
+                    Buffer.BlockCopy(pcmResult, 0, _decompressedPcmBytes, 0, _decompressedPcmBytes.Length);
+
+                    _isDecompressed = true;
+                    DrawWaveformFromPcm(_decompressedPcmBytes, apSampleRate);
+                }
+
+                if (!_isDecompressed && _decompressedPcmBytes != null)
+                {
+                    _isDecompressed = true;
+                    DrawWaveformFromPcm(_decompressedPcmBytes, GetDecompressedSampleRate());
+                }
+
+                if (PlayAudiobtn != null) PlayAudiobtn.Enabled = true;
+
+                MessageBox.Show(
+                    $"File loaded and decompressed successfully!\n\nAlgorithm: {_lastUsedAlgorithmName}\nDecompressed Size: {FormatBytes(_decompressedPcmBytes.Length)}\n\nClick Play Audio to listen.",
+                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to load compressed file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+
 
     }
 }
